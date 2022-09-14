@@ -1,21 +1,24 @@
-from setting import log_level
+from bar import Bar
+from ctx import Ctx
 
 
-def log_debug(msg):
-    if log_level >= 0:
-        print(msg)
+class Log:
+    def __init__(self, level: int, ctx: Ctx):
+        self.level = level
+        self.bar = Bar(ctx)
 
+    def log_debug(self, ContextInfo, msg):
+        if self.level >= 0:
+            print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
-def log_info(msg):
-    if log_level >= 1:
-        print(msg)
+    def log_info(self, ContextInfo, msg):
+        if self.level >= 1:
+            print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
+    def log_warn(self, ContextInfo, msg):
+        if self.level >= 2:
+            print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
-def log_warn(msg):
-    if log_level >= 2:
-        print(msg)
-
-
-def log_error(msg):
-    if log_level >= 3:
-        print(msg)
+    def log_error(self, ContextInfo, msg):
+        if self.level >= 3:
+            print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
