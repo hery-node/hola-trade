@@ -7,18 +7,18 @@ class Log:
         self.level = level
         self.bar = Bar(ctx)
 
-    def log_debug(self, ContextInfo, msg):
+    def log_debug(self, ContextInfo, msg: str):
         if self.level >= 0:
             print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
-    def log_info(self, ContextInfo, msg):
+    def log_info(self, ContextInfo, msg: str):
         if self.level >= 1:
             print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
-    def log_warn(self, ContextInfo, msg):
+    def log_warn(self, ContextInfo, msg: str):
         if self.level >= 2:
             print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")
 
-    def log_error(self, ContextInfo, msg):
+    def log_error(self, ContextInfo, msg: str):
         if self.level >= 3:
             print(f"{self.bar.get_time_stamp(ContextInfo)}: {msg}")

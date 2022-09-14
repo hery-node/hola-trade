@@ -41,10 +41,10 @@ class Stock:
         down_price = yest_close * self.get_down_rate()
         return abs(current_price - down_price) < 0.01
 
-    def get_avg_amp(self, ContextInfo, days) -> float:
+    def get_avg_amp(self, ContextInfo, days: int) -> float:
         df = ContextInfo.get_market_data(["high", "low"], stock_code=[self.code], period="1d", count=days)
         return np.mean((df["high"] - df["low"]) * 100 / df["low"])
 
-    def get_avg_price(self, ContextInfo, days) -> float:
+    def get_avg_price(self, ContextInfo, days: int) -> float:
         df = ContextInfo.get_market_data(["close"], stock_code=[self.code], period="1d", count=days)
         return np.mean(df["close"])
