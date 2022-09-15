@@ -22,7 +22,7 @@ class User:
         return obj.m_strInstrumentID + "." + obj.m_strExchangeID
 
     @classmethod
-    def get_trade_account(cls, id: str, container: Container):
+    def get_instance(cls, id: str, container: Container):
         return cls(id, "STOCK", container)
 
     def get_positions(self):
@@ -30,6 +30,13 @@ class User:
 
     def get_holdings(self) -> list[Holding]:
         return [Holding(self.__get_stock_code(obj), obj.m_dSettlementPrice, obj.m_nCanUseVolume, obj.m_nVolume, obj.m_dMarketValue) for obj in self.get_positions()]
+
+    def get_holding(self, code: str) -> Holding:
+        holdings = [holding for holding in self.get_holdings() if holding.code == code]
+        if len(holdings) == 1:
+            return holdings[0]
+        else:
+            return None
 
     def get_account(self) -> Account:
         account = self.__get_stock_account()

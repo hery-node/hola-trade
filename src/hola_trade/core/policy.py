@@ -18,14 +18,14 @@ class Policy(ABC):
         self.cleaned = False
         self.enabled = False
 
-    @abstractmethod
-    def load(self):
-        # load codes or other loading
+    def load_codes(self, ctx: Context) -> list[str]:
+        return []
+
+    def load(self, ctx: Context):
         pass
 
-    @abstractmethod
-    def clean(self):
-        # do some cleaning
+    def clean(self, ctx: Context):
+        self.codes = []
         pass
 
     @abstractmethod
@@ -33,53 +33,52 @@ class Policy(ABC):
         # write your policy code here
         pass
 
-    def init_setting(self, policy_ratio: float, max_ratio: float, policy_holdings: int, max_holdings: int):
-        if policy_ratio <= 0 or policy_ratio > 1:
-            raise ValueError(f"policy_ratio should between 0~1:{policy_ratio}")
+    def init_setting(self, holding_ratio: float,  max_ratio: float, max_holdings: int):
+        if holding_ratio <= 0 or holding_ratio > 1:
+            raise ValueError(f"holding_ratio should between 0~1:{holding_ratio}")
 
         if max_ratio <= 0 or max_ratio > 1:
             raise ValueError(f"max_ratio should between 0~1:{max_ratio}")
 
-        if policy_holdings > 0 and max_holdings > 0 and policy_holdings > max_holdings:
-            raise ValueError(f"policy_holdings:{policy_holdings} should less than max_holdings:{max_holdings}")
-
-        account = self.user.get_account()
-        stock_ratio = account.stock_value / account.total_assets
-        if stock_ratio >= max_ratio:
-            self.enabled = False
-            return
-
-        account_holdings = len(self.user.get_holdings())
-        if max_holdings > 0 and max_holdings < account_holdings:
-            self.enabled = False
-            return
-
-        max_cash = account.total_assets * max_ratio - account.stock_value
-        policy_cash = account.total_assets * policy_ratio
-        self.cash = min([max_cash, policy_cash, account.cash])
-        self.holdings_num = -1
-        if policy_holdings > 0:
-            if max_holdings > 0:
-                self.holdings_num = min([policy_holdings, max_holdings - account_holdings])
-            else:
-                self.holdings_num = policy_holdings
-        else:
-            if max_holdings > 0:
-                self.holdings_num = max_holdings - account_holdings
-
+        self.holding_ratio = holding_ratio
+        self.max_ratio = max_ratio
+        self.max_holdings = max_holdings
         self.enabled = True
+
+    def get_money(self, code: str) -> float:
+        account = self.user.get_account()
+        max_money = account.total_assets * self.max_ratio - account.stock_value
+        if max_money <= 0:
+            self.log.log_warn("The holding total value is more than max ratio control, so no money can be used.")
+            return 0
+
+        holding = self.user.get_holding(code)
+        if holding:
+            holding_money = account.total_assets * self.holding_ratio - holding.value
+            if holding_money > 0:
+                return min([holding_money, account.cash, max_money])
+            else:
+                self.log.log_warn("The holding value has reached holding ratio, so no money can be used.")
+                return 0
+        else:
+            if len(self.user.get_holdings()) < self.max_holdings:
+                return min([account.total_assets * self.holding_ratio, account.cash, max_money])
+            else:
+                self.log.log_warn("The holding number has reached max_holdings, so no money can be used.")
+                return 0
 
     def handle_bar(self, ctx: Context):
         if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
-            self.load()
+            self.codes = self.load_codes(ctx)
+            self.load(ctx)
             self.cleaned = False
             self.loaded = True
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
-            self.clean()
+            self.clean(ctx)
 
             if ctx.do_back_test():
                 profit = self.user.get_profit(ctx.get_capital())
