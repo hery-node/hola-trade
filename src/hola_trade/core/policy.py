@@ -1,17 +1,36 @@
+from abc import ABC, abstractmethod
 from hola_trade.core.bar import Bar
-from hola_trade.trade.account import Account
 from hola_trade.trade.user import User
 from hola_trade.core.ctx import Context
 from hola_trade.core.container import Container
 
 
-class Policy:
+class Policy(ABC):
     def __init__(self, name: str, user: User,  container: Container):
         self.name = name
         self.user = user
         self.bar = Bar(container)
         self.container = container
+        self.log = container.log
+        self.codes = []
+        self.loaded = False
+        self.cleaned = False
         self.enabled = False
+
+    @abstractmethod
+    def load(self):
+        # load codes or other loading
+        pass
+
+    @abstractmethod
+    def clean(self):
+        # do some cleaning
+        pass
+
+    @abstractmethod
+    def process_bar(self, ctx: Context):
+        # write your policy code here
+        pass
 
     def init_setting(self, policy_ratio: float, max_ratio: float, policy_holdings: int, max_holdings: int):
         if policy_ratio <= 0 or policy_ratio > 1:
@@ -49,9 +68,23 @@ class Policy:
 
         self.enabled = True
 
-    def handlebar(self, ctx: Context):
-        if not self.enabled:
+    def handle_bar(self, ctx: Context):
+        if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
-        if self.bar.is_history_bar(ctx) or (not self.bar.is_trade_bar(Context)):
-            return
+        if (not self.loaded) and self.bar.is_trade_bar(ctx):
+            self.load()
+            self.cleaned = False
+            self.loaded = True
+
+        if (not self.cleaned) and self.bar.is_close_bar(ctx):
+            self.clean()
+
+            if ctx.do_back_test():
+                profit = self.user.get_profit(ctx.get_capital())
+                self.log.log_info(ctx, f"total profit: {profit}%")
+
+            self.cleaned = True
+            self.loaded = False
+
+        self.process_bar(ctx)

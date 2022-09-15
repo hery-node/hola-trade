@@ -12,17 +12,13 @@ class Bar:
     def get_bar_time(self, ctx: Context) -> str:
         return self.container.timetag_to_datetime(ctx.get_bar_timetag(), "%H:%M:%S")
 
-    def is_end_bar(self, ctx: Context) -> bool:
-        bar_time = self.get_bar_time(ctx)
-        return bar_time == "14:55:00"
-
     def is_trade_bar(self, ctx: Context) -> bool:
         bar_time = self.get_bar_time(ctx)
-        return bar_time >= "09:30:00" and bar_time <= "15:00:00"
+        return bar_time >= "09:30:00" and bar_time < "14:55:00"
 
     def is_close_bar(self, ctx: Context) -> bool:
         bar_time = self.get_bar_time(ctx)
-        return bar_time == "15:00:00"
+        return bar_time == "14:55:00"
 
     def is_history_bar(self, ctx: Context) -> bool:
         return not ctx.is_last_bar() and not ctx.do_back_test()

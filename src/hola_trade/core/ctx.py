@@ -28,3 +28,6 @@ class Context:
             return self.ContextInfo.get_market_data(["close"], stock_code=[code])
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code]["lastPrice"]
+
+    def get_capital(self) -> float:
+        return self.ContextInfo.capital
