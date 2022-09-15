@@ -4,6 +4,7 @@ from hola_trade.core.log import Log
 from hola_trade.trade.user import User
 from hola_trade.core.ctx import Context
 from hola_trade.core.container import Container
+from hola_trade.trade.stock import Stock
 
 
 class Policy(ABC):
@@ -14,6 +15,7 @@ class Policy(ABC):
         self.bar = Bar(container)
         self.log = Log(container)
         self.codes = []
+        self.stocks = {}
         self.loaded = False
         self.cleaned = False
         self.enabled = False
@@ -25,7 +27,6 @@ class Policy(ABC):
         pass
 
     def clean(self, ctx: Context):
-        self.codes = []
         pass
 
     @abstractmethod
@@ -67,12 +68,16 @@ class Policy(ABC):
                 self.log.log_warn("The holding number has reached max_holdings, so no money can be used.")
                 return 0
 
+    def get_stock(self, code: str) -> Stock:
+        return self.stocks[code]
+
     def handle_bar(self, ctx: Context):
         if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
             self.codes = self.load_codes(ctx)
+            self.stocks = {i: Stock(i) for i in self.codes}
             self.load(ctx)
             self.cleaned = False
             self.loaded = True

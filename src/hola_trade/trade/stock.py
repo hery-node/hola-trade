@@ -22,6 +22,11 @@ class Stock:
     def get_price(self, ctx: Context) -> float:
         return ctx.get_price(self.code)
 
+    def get_rate(self, ctx: Context) -> float:
+        price = self.get_price(ctx)
+        yest = self.get_yest_close(ctx)
+        return round((price - yest) * 100 / yest, 2)
+
     def is_up(self, ctx: Context) -> bool:
         current_price = self.get_price(ctx)
         yest_close = self.get_yest_close(ctx)
