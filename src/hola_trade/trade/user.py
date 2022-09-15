@@ -38,6 +38,10 @@ class User:
         else:
             return None
 
+    def get_holding_codes(self) -> list[str]:
+        holdings = self.get_holdings()
+        return [holding.code for holding in holdings]
+
     def get_account(self) -> Account:
         account = self.__get_stock_account()
         return Account(self.id, account.m_dAvailable, account.m_dStockValue, account.m_dBalance)
