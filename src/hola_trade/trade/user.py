@@ -1,3 +1,4 @@
+from hola_trade.core.log import Log
 from hola_trade.core.ctx import Context
 from hola_trade.trade.account import Account
 from hola_trade.core.container import Container
@@ -9,7 +10,7 @@ class User:
         self.id = id
         self.type = type
         self.container = container
-        self.log = container.log
+        self.log = Log(container)
 
     def __get_stock_account(self):
         accounts = self.container.get_trade_detail_data(self.id, self.type, "ACCOUNT")

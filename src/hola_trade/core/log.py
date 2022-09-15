@@ -4,22 +4,23 @@ from hola_trade.core.container import Container
 
 
 class Log:
-    def __init__(self, level: int, container: Container):
-        self.level = level
+    log_level = 0
+
+    def __init__(self, container: Container):
         self.bar = Bar(container)
 
     def log_debug(self, ctx: Context, msg: str):
-        if self.level >= 0:
+        if self.log_level >= 0:
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")
 
     def log_info(self, ctx: Context, msg: str):
-        if self.level >= 1:
+        if self.log_level >= 1:
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")
 
     def log_warn(self, ctx: Context, msg: str):
-        if self.level >= 2:
+        if self.log_level >= 2:
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")
 
     def log_error(self, ctx: Context, msg: str):
-        if self.level >= 3:
+        if self.log_level >= 3:
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")

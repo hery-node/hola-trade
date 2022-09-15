@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from hola_trade.core.bar import Bar
+from hola_trade.core.log import Log
 from hola_trade.trade.user import User
 from hola_trade.core.ctx import Context
 from hola_trade.core.container import Container
@@ -9,9 +10,9 @@ class Policy(ABC):
     def __init__(self, name: str, user: User,  container: Container):
         self.name = name
         self.user = user
-        self.bar = Bar(container)
         self.container = container
-        self.log = container.log
+        self.bar = Bar(container)
+        self.log = Log(container)
         self.codes = []
         self.loaded = False
         self.cleaned = False
