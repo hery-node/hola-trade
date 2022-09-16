@@ -1,3 +1,4 @@
+from typing import List
 from hola_trade.trade.account import User
 from hola_trade.core.ctx import Context, Bar, Log, Container
 from hola_trade.trade.ratio import RatioRule
@@ -11,7 +12,7 @@ class Policy:
         self.container = container
         self.bar = Bar(container)
         self.log = Log(container)
-        self.codes = []
+        self.codes: List[str] = []
         self.adjust_time = adjust_time
         self.ratio_rule = ratio_rule
         self.policy_conditions = policy_conditions
@@ -19,13 +20,13 @@ class Policy:
         self.cleaned = False
         self.enabled = False
 
-    def load(self, ctx: Context):
+    def load(self, ctx: Context) -> None:
         pass
 
-    def clean(self, ctx: Context):
+    def clean(self, ctx: Context) -> None:
         pass
 
-    def handle_bar(self, ctx: Context):
+    def handle_bar(self, ctx: Context) -> None:
         if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
@@ -65,7 +66,8 @@ class Policy:
                 # 清仓用share来卖出
                 self.log.log_debug(ctx, f"{target.code} meets the clear condition and clear it")
                 holding = self.user.get_holding(target.code)
-                self.user.order_by_shares(ctx, target.code, holding.available * -1)
+                if holding:
+                    self.user.order_by_shares(ctx, target.code, holding.available * -1)
 
             if self.bar.is_adjust_bar(ctx, self.adjust_time):
                 ratio = self.ratio_rule.get_adjust_ratio(ctx)

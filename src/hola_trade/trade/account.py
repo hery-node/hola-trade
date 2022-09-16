@@ -1,8 +1,9 @@
+from typing import List, Optional
 from hola_trade.core.ctx import Context, Container, Log
 
 
 class Account:
-    def __init__(self, id: str, cash: float, stock_value: float, total_assets: float):
+    def __init__(self, id: str, cash: float, stock_value: float, total_assets: float) -> None:
         self.id = id
         self.cash = cash
         self.stock_value = stock_value
@@ -10,7 +11,7 @@ class Account:
 
 
 class Holding:
-    def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float, profit_rate: float, today: bool):
+    def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float, profit_rate: float, today: bool) -> None:
         self.code = code
         self.open_date = open_date
         self.open_price = open_price
@@ -24,7 +25,7 @@ class Holding:
 
 
 class User:
-    def __init__(self, id: str, type: str, container: Container):
+    def __init__(self, id: str, type: str, container: Container) -> None:
         self.id = id
         self.type = type
         self.container = container
@@ -46,7 +47,7 @@ class User:
     def get_positions(self):
         return self.container.get_trade_detail_data(self.id, self.type, "POSITION")
 
-    def get_holdings(self) -> list[Holding]:
+    def get_holdings(self) -> List[Holding]:
         return [Holding(
             self.__get_stock_code(obj),
             obj.m_strOpenDate,
@@ -60,18 +61,18 @@ class User:
             obj.m_bIsToday
         ) for obj in self.get_positions()]
 
-    def get_holding(self, code: str) -> Holding:
+    def get_holding(self, code: str) -> Optional[Holding]:
         holdings = [holding for holding in self.get_holdings() if holding.code == code]
         if len(holdings) == 1:
             return holdings[0]
         else:
             return None
 
-    def get_holding_codes(self) -> list[str]:
+    def get_holding_codes(self) -> List[str]:
         holdings = self.get_holdings()
         return [holding.code for holding in holdings]
 
-    def get_available_holding_codes(self) -> list[str]:
+    def get_available_holding_codes(self) -> List[str]:
         holdings = self.get_holdings()
         return [holding.code for holding in holdings if holding.available > 0]
 
@@ -84,7 +85,7 @@ class User:
         profit = (account.total_assets - start_assets) * 100 / start_assets
         return round(profit, 2)
 
-    def order_by_value(self, ctx: Context, code: str, cash: float, price=0):
+    def order_by_value(self, ctx: Context, code: str, cash: float, price: float = 0) -> None:
         if cash:
             if price:
                 self.log.log_info(ctx, f" order_by_cash: code:{code} at price:{price} with cash:{cash}")
@@ -93,7 +94,7 @@ class User:
                 self.log.log_info(ctx, f"order_by_cash: code:{code} with cash:{cash} at latest price")
                 self.container.order_value(code, cash, ctx.ContextInfo, self.id)
 
-    def order_by_shares(self, ctx: Context, code: str, share: int, price=0):
+    def order_by_shares(self, ctx: Context, code: str, share: int, price: float = 0) -> None:
         if share:
             if price:
                 self.log.log_info(ctx, f"order_by_shares: code:{code} at price:{price} with share:{share}")

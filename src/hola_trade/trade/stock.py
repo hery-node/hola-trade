@@ -1,3 +1,4 @@
+from typing import List, Optional
 import numpy as np
 from pandas.core.series import Series
 from pandas.core.frame import DataFrame
@@ -5,7 +6,7 @@ from hola_trade.core.ctx import Context, Bar
 
 
 class Stock:
-    def __init__(self, code: str):
+    def __init__(self, code: str) -> None:
         self.code = code
 
     def get_up_rate(self) -> float:
@@ -14,7 +15,7 @@ class Stock:
     def get_down_rate(self) -> float:
         return 0.8 if self.code[0] == '3' or self.code[:3] == '688' else 0.9
 
-    def get_yest_data(self, ctx: Context, fields: list[str]):
+    def get_yest_data(self, ctx: Context, fields: List[str]) -> Series:
         df = ctx.get_market_data(fields, self.code, days=2)
         return df.iloc[0]
 
@@ -68,21 +69,21 @@ class Stock:
         return 0
 
     # how many days
-    def get_rolling_avg_price(self, ctx: Context, window: int, days: int) -> Series:
+    def get_rolling_avg_price(self, ctx: Context, window: int, days: int) -> Optional[Series]:
         df = ctx.get_market_data(["close"], self.code, days + window)
         if len(df) == days:
             return df.rolling(window=window).mean[days*-1:]["close"]
         else:
             return None
 
-    def get_prices(self, ctx: Context, days: int) -> Series:
+    def get_prices(self, ctx: Context, days: int) -> Optional[Series]:
         df = ctx.get_market_data(["close"], self.code, days)
         if len(df) == days:
             return df["close"]
         else:
             return None
 
-    def get_history(self, ctx: Context, fields, days: int) -> DataFrame:
+    def get_history(self, ctx: Context, fields: List[str], days: int) -> Optional[DataFrame]:
         df = ctx.get_market_data(fields, self.code, days)
         if len(df) == days:
             return df
