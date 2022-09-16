@@ -78,7 +78,7 @@ class StaticRatioRule(RatioRule):
 
 
 class TrendRatioRule(RatioRule):
-    def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_ratio: Ratio, mid_ratio: Ratio, long_ratio: Ratio):
+    def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_ratio: Ratio, mid_ratio: Ratio, long_ratio: Ratio, no_ratio: float):
         super().__init__(user, container, holding_ratio, batches)
 
         self.main_stock = Stock(main_code)
@@ -91,6 +91,7 @@ class TrendRatioRule(RatioRule):
         self.short_ratio = short_ratio
         self.mid_ratio = mid_ratio
         self.long_ratio = long_ratio
+        self.no_ratio = no_ratio
 
     def get_max_ratio(self, ctx: Context) -> float:
         current_price = self.main_stock.get_price(ctx)
@@ -103,5 +104,7 @@ class TrendRatioRule(RatioRule):
             return self.long_ratio.ratio
         elif total == 2:
             return self.mid_ratio.ratio
-        else:
+        elif total == 1:
             return self.short_ratio.ratio
+        else:
+            return self.no_ratio
