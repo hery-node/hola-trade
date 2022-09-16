@@ -1,5 +1,6 @@
 import numpy as np
 from pandas.core.series import Series
+from pandas.core.frame import DataFrame
 from hola_trade.core.ctx import Context, Bar
 
 
@@ -78,5 +79,12 @@ class Stock:
         df = ctx.get_market_data(["close"], self.code, days)
         if len(df) == days:
             return df["close"]
+        else:
+            return None
+
+    def get_history(self, ctx: Context, fields, days: int) -> DataFrame:
+        df = ctx.get_market_data(fields, self.code, days)
+        if len(df) == days:
+            return df
         else:
             return None
