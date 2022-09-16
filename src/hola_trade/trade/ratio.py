@@ -37,9 +37,11 @@ class RatioRule(ABC):
     def get_money(self, ctx: Context, code: str) -> float:
         account = self.user.get_account()
         max_ratio = self.get_max_ratio(ctx)
+        self.log.log_debug(f"max ratio is {max_ratio}")
+
         max_money = account.total_assets * max_ratio - account.stock_value
         if max_money <= 0:
-            self.log.log_warn("The holding total value is more than max ratio control, so no money can be used.")
+            self.log.log_info("The holding total value is more than max ratio control, so no money can be used.")
             return 0
 
         holding_money = account.total_assets * max_ratio * self.holding_ratio.ratio
@@ -51,13 +53,13 @@ class RatioRule(ABC):
             if holding_left_money > 0:
                 return min([batch_money, holding_left_money, account.cash, max_money])
             else:
-                self.log.log_warn("The holding value has reached holding ratio, so no money can be used.")
+                self.log.log_info("The holding value has reached holding ratio, so no money can be used.")
                 return 0
         else:
             if len(self.user.get_holdings()) < self.holding_ratio.num:
                 return min([batch_money, account.cash, max_money])
             else:
-                self.log.log_warn(f"The holding number has reached max_holdings:{self.holding_ratio.num}, so no money can be used.")
+                self.log.log_info(f"The holding number has reached max_holdings:{self.holding_ratio.num}, so no money can be used.")
                 return 0
 
     @abstractmethod

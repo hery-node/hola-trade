@@ -44,7 +44,7 @@ class Policy:
                 # 开仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.log.log_info(ctx, f"{target.code} meets the buy condition and buy it")
+                    self.log.log_debug(ctx, f"{target.code} meets the buy condition and buy it")
                     self.user.order_by_value(ctx, target.code, money)
 
             add_targets = self.policy_conditions.add_condition.filter(ctx, holding_codes)
@@ -52,19 +52,19 @@ class Policy:
                 # 加仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.log.log_info(ctx, f"{target.code} meets the add condition and add it")
+                    self.log.log_debug(ctx, f"{target.code} meets the add condition and add it")
                     self.user.order_by_value(ctx, target.code, money)
 
             sell_targets = self.policy_conditions.sell_condition.filter(ctx, holding_codes)
             for target in sell_targets:
                 # 减仓不受仓位的控制，所以从条件中获得卖出金额
-                self.log.log_info(ctx, f"{target.code} meets the sell condition and sell it")
+                self.log.log_debug(ctx, f"{target.code} meets the sell condition and sell it")
                 self.user.order_by_value(ctx, target.code, target.value * -1)
 
             clear_targets = self.policy_conditions.clear_condition.filter(ctx, holding_codes)
             for target in clear_targets:
                 # 清仓用share来卖出
-                self.log.log_info(ctx, f"{target.code} meets the clear condition and clear it")
+                self.log.log_debug(ctx, f"{target.code} meets the clear condition and clear it")
                 holding = self.user.get_holding(target.code)
                 self.user.order_by_shares(ctx, target.code, holding.available * -1)
 
@@ -75,7 +75,7 @@ class Policy:
                     for holding in holdings:
                         cash = min([holding.available * holding.price, holding.value * ratio])
                         # 调仓
-                        self.log.log_info(ctx, f"{holding.code} meets the adjust condition and adjust it")
+                        self.log.log_debug(ctx, f"{holding.code} meets the adjust condition and adjust it")
                         self.user.order_by_value(ctx, holding.code, cash * -1)
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
