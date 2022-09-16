@@ -23,7 +23,7 @@ class Context:
         return self.get_stock_list_in_sector('沪深A股')
 
     def get_market_data(self, fields: list[str], code: str, days: int) -> DataFrame:
-        return self.ContextInfo.get_market_data(fields, stock_code=[code], period="1d", count=days)
+        return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
 
     def do_back_test(self) -> bool:
         return self.ContextInfo.do_back_test

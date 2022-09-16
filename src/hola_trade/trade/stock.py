@@ -1,4 +1,5 @@
 import numpy as np
+from pandas.core.series import Series
 from hola_trade.core.ctx import Context
 
 
@@ -41,8 +42,29 @@ class Stock:
 
     def get_avg_amp(self, ctx: Context, days: int) -> float:
         df = ctx.get_market_data(["high", "low"], self.code, days)
-        return np.mean((df["high"] - df["low"]) * 100 / df["low"])
+        if len(df) == days:
+            return np.mean((df["high"] - df["low"]) * 100 / df["low"])
+        else:
+            return 0
 
     def get_avg_price(self, ctx: Context, days: int) -> float:
         df = ctx.get_market_data(["close"], self.code, days)
-        return np.mean(df["close"])
+        if len(df) == days:
+            return np.mean(df["close"])
+        else:
+            return 0
+
+    # how many days
+    def get_rolling_avg_price(self, ctx: Context, window: int, days: int) -> Series:
+        df = ctx.get_market_data(["close"], self.code, days + window)
+        if len(df) == days:
+            return df.rolling(window=window).mean[days*-1:]["close"]
+        else:
+            return None
+
+    def get_prices(self, ctx: Context, days: int) -> Series:
+        df = ctx.get_market_data(["close"], self.code, days)
+        if len(df) == days:
+            return df["close"]
+        else:
+            return None
