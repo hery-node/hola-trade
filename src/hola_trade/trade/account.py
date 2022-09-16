@@ -10,12 +10,17 @@ class Account:
 
 
 class Holding:
-    def __init__(self, code: str, price: float, available: int, volume: int, value: float):
+    def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float, profit_rate: float, today: bool):
         self.code = code
+        self.open_date = open_date
+        self.open_price = open_price
         self.price = price
         self.available = available
         self.volume = volume
         self.value = value
+        self.profit = profit
+        self.profit_rate = profit_rate
+        self.today = today
 
 
 class User:
@@ -42,7 +47,18 @@ class User:
         return self.container.get_trade_detail_data(self.id, self.type, "POSITION")
 
     def get_holdings(self) -> list[Holding]:
-        return [Holding(self.__get_stock_code(obj), obj.m_dSettlementPrice, obj.m_nCanUseVolume, obj.m_nVolume, obj.m_dMarketValue) for obj in self.get_positions()]
+        return [Holding(
+            self.__get_stock_code(obj),
+            obj.m_strOpenDate,
+            obj.m_dOpenPrice,
+            obj.m_dLastPrice,
+            obj.m_nCanUseVolume,
+            obj.m_nVolume,
+            obj.m_dMarketValue,
+            obj.m_dFloatProfit,
+            obj.m_dProfitRate,
+            obj.m_bIsToday
+        ) for obj in self.get_positions()]
 
     def get_holding(self, code: str) -> Holding:
         holdings = [holding for holding in self.get_holdings() if holding.code == code]

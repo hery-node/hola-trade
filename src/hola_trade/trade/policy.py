@@ -30,7 +30,7 @@ class Policy:
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
-            targets = self.policy_conditions.select_condition.filter(self.bar, ctx, ctx.get_all_codes())
+            targets = self.policy_conditions.select_condition.filter(self.bar, ctx, self.user, ctx.get_all_codes())
             self.codes = [target.code for target in targets]
             self.load(ctx)
             self.cleaned = False
@@ -39,7 +39,7 @@ class Policy:
         if self.bar.is_trade_bar(ctx):
             holding_codes = self.user.get_holding_codes()
 
-            buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.codes)
+            buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
             for target in buy_targets:
                 # 开仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
@@ -47,7 +47,7 @@ class Policy:
                     self.log.log_debug(ctx, f"{target.code} meets the buy condition and buy it")
                     self.user.order_by_value(ctx, target.code, money)
 
-            add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, holding_codes)
+            add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in add_targets:
                 # 加仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
@@ -55,13 +55,13 @@ class Policy:
                     self.log.log_debug(ctx, f"{target.code} meets the add condition and add it")
                     self.user.order_by_value(ctx, target.code, money)
 
-            sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, holding_codes)
+            sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in sell_targets:
                 # 减仓不受仓位的控制，所以从条件中获得卖出金额
                 self.log.log_debug(ctx, f"{target.code} meets the sell condition and sell it")
                 self.user.order_by_value(ctx, target.code, target.value * -1)
 
-            clear_targets = self.policy_conditions.clear_condition.filter(self.bar, ctx, holding_codes)
+            clear_targets = self.policy_conditions.clear_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in clear_targets:
                 # 清仓用share来卖出
                 self.log.log_debug(ctx, f"{target.code} meets the clear condition and clear it")

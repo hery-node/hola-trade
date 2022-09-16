@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from hola_trade.core.ctx import Context, Bar
+from hola_trade.trade.account import User
 
 
 class Target:
@@ -10,7 +11,7 @@ class Target:
 
 class Condition(ABC):
     @abstractmethod
-    def filter(self, bar: Bar, ctx: Context, codes: list[str]) -> list[Target]:
+    def filter(self, bar: Bar, ctx: Context, user: User, codes: list[str]) -> list[Target]:
         # write your policy code here
         pass
 
