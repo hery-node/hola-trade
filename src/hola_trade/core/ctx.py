@@ -1,4 +1,5 @@
 from pandas.core.frame import DataFrame
+from datetime import datetime
 
 
 class Container:
@@ -37,6 +38,12 @@ class Context:
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code]["lastPrice"]
 
+    def get_amount(self, code: str) -> float:
+        if self.do_back_test():
+            return self.ContextInfo.get_market_data(["amount"], stock_code=[code])
+        else:
+            return self.ContextInfo.get_full_tick(stock_code=[code])[code]["amount"]
+
     def get_capital(self) -> float:
         return self.ContextInfo.capital
 
@@ -47,6 +54,32 @@ class Bar:
 
     def get_timestamp(self, ctx: Context) -> str:
         return self.container.timetag_to_datetime(ctx.get_bar_timetag(), "%Y-%m-%d %H:%M:%S")
+
+    def get_bar_datetime(self, ctx: Context) -> datetime:
+        pattern = "%Y-%m-%d %H:%M:%S"
+        time = self.container.timetag_to_datetime(ctx.get_bar_timetag(), pattern)
+        return datetime.strptime(time, pattern)
+
+    def get_bar_date(self, ctx: Context) -> datetime:
+        pattern = "%Y-%m-%d"
+        time = self.container.timetag_to_datetime(ctx.get_bar_timetag(), pattern)
+        return datetime.strptime(time, pattern)
+
+    def get_open_seconds(self, ctx: Context) -> int:
+        if not self.is_trade_bar(ctx):
+            return 0
+
+        current = self.get_bar_datetime(ctx)
+        open = self.get_bar_date(ctx)
+        open.hour = 9
+        open.minute = 30
+        open.second = 0
+        seconds = (current - open).total_seconds
+        bar_time = self.get_bar_time(ctx)
+        if bar_time >= "13:00:00":
+            return seconds - 90 * 60
+        else:
+            return seconds
 
     def get_bar_time(self, ctx: Context) -> str:
         return self.container.timetag_to_datetime(ctx.get_bar_timetag(), "%H:%M:%S")

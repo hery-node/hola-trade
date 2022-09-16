@@ -1,6 +1,6 @@
 import numpy as np
 from pandas.core.series import Series
-from hola_trade.core.ctx import Context
+from hola_trade.core.ctx import Context, Bar
 
 
 class Stock:
@@ -53,6 +53,18 @@ class Stock:
             return np.mean(df["close"])
         else:
             return 0
+
+    def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
+        days = 5
+        df = ctx.get_market_data(["amount"], self.code, days)
+        if len(df) == days:
+            avg = np.mean(df["amount"]) / 240
+            amount = ctx.get_amount(self.code)
+            minutes = bar.get_open_seconds(ctx) // 60
+            if minutes > 0:
+                return round((amount/minutes)/avg, 2)
+
+        return 0
 
     # how many days
     def get_rolling_avg_price(self, ctx: Context, window: int, days: int) -> Series:
