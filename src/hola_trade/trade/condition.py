@@ -2,9 +2,15 @@ from abc import ABC, abstractmethod
 from hola_trade.core.ctx import Context
 
 
+class Target:
+    def __init__(self, code, value) -> None:
+        self.code = code
+        self.value = value
+
+
 class Condition(ABC):
     @abstractmethod
-    def filter_codes(self, ctx: Context, codes: list[str]) -> list[str]:
+    def filter(self, ctx: Context, codes: list[str]) -> list[Target]:
         # write your policy code here
         pass
 

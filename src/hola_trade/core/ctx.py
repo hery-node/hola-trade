@@ -1,6 +1,14 @@
 from pandas.core.frame import DataFrame
 
 
+class Container:
+    def __init__(self, timetag_to_datetime, get_trade_detail_data, order_value, order_shares):
+        self.timetag_to_datetime = timetag_to_datetime
+        self.get_trade_detail_data = get_trade_detail_data
+        self.order_value = order_value
+        self.order_shares = order_shares
+
+
 class Context:
     def __init__(self, ContextInfo):
         self.ContextInfo = ContextInfo
@@ -31,3 +39,52 @@ class Context:
 
     def get_capital(self) -> float:
         return self.ContextInfo.capital
+
+
+class Bar:
+    def __init__(self, container: Container):
+        self.container = container
+
+    def get_timestamp(self, ctx: Context) -> str:
+        return self.container.timetag_to_datetime(ctx.get_bar_timetag(), "%Y-%m-%d %H:%M:%S")
+
+    def get_bar_time(self, ctx: Context) -> str:
+        return self.container.timetag_to_datetime(ctx.get_bar_timetag(), "%H:%M:%S")
+
+    def is_trade_bar(self, ctx: Context) -> bool:
+        bar_time = self.get_bar_time(ctx)
+        return bar_time >= "09:30:00" and bar_time < "14:55:00"
+
+    def is_close_bar(self, ctx: Context) -> bool:
+        bar_time = self.get_bar_time(ctx)
+        return bar_time == "14:55:00"
+
+    def is_adjust_bar(self, ctx: Context, time: str) -> bool:
+        bar_time = self.get_bar_time(ctx)
+        return bar_time == time
+
+    def is_history_bar(self, ctx: Context) -> bool:
+        return not ctx.is_last_bar() and not ctx.do_back_test()
+
+
+class Log:
+    log_level = 0
+
+    def __init__(self, container: Container):
+        self.bar = Bar(container)
+
+    def log_debug(self, ctx: Context, msg: str):
+        if self.log_level >= 0:
+            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+
+    def log_info(self, ctx: Context, msg: str):
+        if self.log_level >= 1:
+            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+
+    def log_warn(self, ctx: Context, msg: str):
+        if self.log_level >= 2:
+            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+
+    def log_error(self, ctx: Context, msg: str):
+        if self.log_level >= 3:
+            print(f"{self.bar.get_timestamp(ctx)}: {msg}")

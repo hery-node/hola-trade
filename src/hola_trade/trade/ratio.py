@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
-from hola_trade.core.log import Log
-from hola_trade.core.ctx import Context
-from hola_trade.core.container import Container
-from hola_trade.trade.user import User
+from hola_trade.core.ctx import Context, Container, Log
+from hola_trade.trade.account import User
 from hola_trade.trade.stock import Stock
 
 
 class Ratio:
     def __init__(self, num: int, ratio: float) -> None:
-        if ratio <= 0 or ratio > 1:
+        if ratio < 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1:{ratio}")
         if num < 0:
             raise ValueError(f"num should be positive:{num}")
@@ -26,6 +24,15 @@ class RatioRule(ABC):
         self.user = user
         self.holding_ratio = holding_ratio
         self.batches = batches
+
+    def get_adjust_ratio(self, ctx: Context) -> float:
+        account = self.user.get_account()
+        max_ratio = self.get_max_ratio(ctx)
+        stock_ratio = account.stock_value / account.total_assets
+        if stock_ratio <= max_ratio:
+            return 0
+        ratio = (stock_ratio - max_ratio) / stock_ratio
+        return round(ratio, 2)
 
     def get_money(self, ctx: Context, code: str) -> float:
         account = self.user.get_account()

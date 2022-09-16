@@ -1,20 +1,18 @@
-from hola_trade.core.bar import Bar
-from hola_trade.core.log import Log
-from hola_trade.trade.user import User
-from hola_trade.core.ctx import Context
-from hola_trade.core.container import Container
+from hola_trade.trade.account import User
+from hola_trade.core.ctx import Context, Bar, Log, Container
 from hola_trade.trade.ratio import RatioRule
 from hola_trade.trade.condition import PolicyConditions
 
 
 class Policy:
-    def __init__(self, name: str, user: User,  container: Container, ratio_rule: RatioRule, policy_conditions: PolicyConditions):
+    def __init__(self, name: str, user: User,  container: Container, adjust_time: str, ratio_rule: RatioRule, policy_conditions: PolicyConditions):
         self.name = name
         self.user = user
         self.container = container
         self.bar = Bar(container)
         self.log = Log(container)
         self.codes = []
+        self.adjust_time = adjust_time
         self.ratio_rule = ratio_rule
         self.policy_conditions = policy_conditions
         self.loaded = False
@@ -32,33 +30,53 @@ class Policy:
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
-            self.codes = self.policy_conditions.select_condition.filter_codes(ctx, ctx.get_all_codes())
+            targets = self.policy_conditions.select_condition.filter(ctx, ctx.get_all_codes())
+            self.codes = [target.code for target in targets]
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
 
         if self.bar.is_trade_bar(ctx):
-            buy_codes = self.policy_conditions.buy_condition.filter_codes(self.codes)
-            for code in buy_codes:
-                money = self.ratio_rule.get_money(ctx, code)
+            holding_codes = self.user.get_holding_codes()
+
+            buy_targets = self.policy_conditions.buy_condition.filter(ctx, self.codes)
+            for target in buy_targets:
+                # 开仓受仓位的控制，所以从仓位控制中获得资金
+                money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.user.order_by_value(ctx, code, money)
+                    self.log.log_info(ctx, f"{target.code} meets the buy condition and buy it")
+                    self.user.order_by_value(ctx, target.code, money)
 
-            sell_codes = self.policy_conditions.sell_condition.filter_codes(self.user.get_holding_codes())
-            for code in sell_codes:
-                money = self.user.get_holding(code).value / self.ratio_rule.batches
-                self.user.order_by_value(ctx, code, money*-1)
-
-            add_codes = self.policy_conditions.add_condition.filter_codes(self.user.get_holding_codes())
-            for code in add_codes:
-                money = self.ratio_rule.get_money(ctx, code)
+            add_targets = self.policy_conditions.add_condition.filter(ctx, holding_codes)
+            for target in add_targets:
+                # 加仓受仓位的控制，所以从仓位控制中获得资金
+                money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.user.order_by_value(ctx, code, money)
+                    self.log.log_info(ctx, f"{target.code} meets the add condition and add it")
+                    self.user.order_by_value(ctx, target.code, money)
 
-            clear_codes = self.policy_conditions.clear_condition.filter_codes(self.user.get_holding_codes())
-            for code in clear_codes:
-                holding = self.user.get_holding(code)
-                self.user.order_by_shares(ctx, code, holding.available)
+            sell_targets = self.policy_conditions.sell_condition.filter(ctx, holding_codes)
+            for target in sell_targets:
+                # 减仓不受仓位的控制，所以从条件中获得卖出金额
+                self.log.log_info(ctx, f"{target.code} meets the sell condition and sell it")
+                self.user.order_by_value(ctx, target.code, target.value * -1)
+
+            clear_targets = self.policy_conditions.clear_condition.filter(ctx, holding_codes)
+            for target in clear_targets:
+                # 清仓用share来卖出
+                self.log.log_info(ctx, f"{target.code} meets the clear condition and clear it")
+                holding = self.user.get_holding(target.code)
+                self.user.order_by_shares(ctx, target.code, holding.available * -1)
+
+            if self.bar.is_adjust_bar(ctx, self.adjust_time):
+                ratio = self.ratio_rule.get_adjust_ratio(ctx)
+                if ratio > 0:
+                    holdings = self.user.get_holdings()
+                    for holding in holdings:
+                        cash = min([holding.available * holding.price, holding.value * ratio])
+                        # 调仓
+                        self.log.log_info(ctx, f"{holding.code} meets the adjust condition and adjust it")
+                        self.user.order_by_value(ctx, holding.code, cash * -1)
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
             self.clean(ctx)
