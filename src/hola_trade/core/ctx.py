@@ -1,6 +1,5 @@
 from typing import List
 from datetime import datetime
-from pandas.core.frame import DataFrame
 
 
 class Container:
@@ -24,7 +23,8 @@ class Context:
     def get_all_codes(self) -> List[str]:
         return self.get_stock_list_in_sector('沪深A股')
 
-    def get_market_data(self, fields: List[str], code: str, days: int) -> DataFrame:
+    # return DataFrame
+    def get_market_data(self, fields: List[str], code: str, days: int):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
 
     def do_back_test(self) -> bool:
