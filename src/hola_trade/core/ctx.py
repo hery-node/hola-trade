@@ -88,6 +88,10 @@ class Bar:
         bar_time = self.get_bar_time(ctx)
         return bar_time >= "09:30:00" and bar_time < "14:55:00"
 
+    def is_early_bar(self, ctx: Context) -> bool:
+        bar_time = self.get_bar_time(ctx)
+        return bar_time >= "09:30:00" and bar_time <= "10:00:00"
+
     def is_close_bar(self, ctx: Context) -> bool:
         bar_time = self.get_bar_time(ctx)
         return bar_time == "14:55:00"
