@@ -37,8 +37,6 @@ class Policy:
             self.loaded = True
 
         if self.bar.is_trade_bar(ctx):
-            holding_codes = self.user.get_holding_codes()
-
             buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
             for target in buy_targets:
                 # 开仓受仓位的控制，所以从仓位控制中获得资金
@@ -47,6 +45,7 @@ class Policy:
                     self.log.log_debug(ctx, f"{target.code} meets the buy condition and buy it")
                     self.user.order_by_value(ctx, target.code, money)
 
+            holding_codes = self.user.get_available_holding_codes()
             add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in add_targets:
                 # 加仓受仓位的控制，所以从仓位控制中获得资金
@@ -73,10 +72,11 @@ class Policy:
                 if ratio > 0:
                     holdings = self.user.get_holdings()
                     for holding in holdings:
-                        cash = min([holding.available * holding.price, holding.value * ratio])
                         # 调仓
-                        self.log.log_debug(ctx, f"{holding.code} meets the adjust condition and adjust it")
-                        self.user.order_by_value(ctx, holding.code, cash * -1)
+                        cash = min([holding.available * holding.price, holding.value * ratio])
+                        if cash > 0:
+                            self.log.log_debug(ctx, f"{holding.code} meets the adjust condition and adjust it")
+                            self.user.order_by_value(ctx, holding.code, cash * -1)
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
             self.clean(ctx)
