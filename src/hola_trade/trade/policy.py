@@ -6,8 +6,9 @@ from hola_trade.trade.condition import PolicyConditions
 
 
 class Policy:
-    def __init__(self, name: str, user: User,  container: Container, adjust_time: str, ratio_rule: RatioRule, policy_conditions: PolicyConditions):
+    def __init__(self, name: str, sector: str, user: User,  container: Container, adjust_time: str, ratio_rule: RatioRule, policy_conditions: PolicyConditions):
         self.name = name
+        self.sector = sector
         self.user = user
         self.container = container
         self.bar = Bar(container)
@@ -33,8 +34,15 @@ class Policy:
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
             self.log.log_debug(ctx, "begin loading")
-            targets = self.policy_conditions.select_condition.filter(self.bar, ctx, self.user, ctx.get_all_codes())
-            self.codes = [target.code for target in targets]
+            holding_codes = self.user.get_holding_codes()
+            holding_num = self.ratio_rule.holding_ratio.num
+            if len(holding_codes) < holding_num:
+                codes = ctx.get_stock_list_in_sector(self.sector)
+                targets = self.policy_conditions.select_condition.filter(self.bar, ctx, self.user, codes)
+                self.codes = [target.code for target in targets]
+            else:
+                self.codes = []
+
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
@@ -78,7 +86,7 @@ class Policy:
                 if ratio > 0:
                     holdings = self.user.get_holdings()
                     for holding in holdings:
-                        # 调仓
+                        # 按照比例减仓
                         cash = min([holding.available * holding.price, holding.value * ratio])
                         if cash > 0:
                             self.log.log_debug(ctx, f"{holding.code} meets the adjust condition and adjust it")

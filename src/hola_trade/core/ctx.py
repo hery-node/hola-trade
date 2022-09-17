@@ -20,9 +20,6 @@ class Context:
     def get_stock_list_in_sector(self, sector: str) -> List[str]:
         return self.ContextInfo.get_stock_list_in_sector(sector)
 
-    def get_all_codes(self) -> List[str]:
-        return self.get_stock_list_in_sector('沪深A股')
-
     # return DataFrame
     def get_market_data(self, fields: List[str], code: str, days: int):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
