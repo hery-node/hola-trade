@@ -11,7 +11,7 @@ class Account:
 
 
 class Holding:
-    def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float, profit_rate: float, today: bool) -> None:
+    def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float,  today: bool) -> None:
         self.code = code
         self.open_date = open_date
         self.open_price = open_price
@@ -20,7 +20,7 @@ class Holding:
         self.volume = volume
         self.value = value
         self.profit = profit
-        self.profit_rate = profit_rate
+        self.profit_rate = 0 if value == 0 else int(profit * 100 / value)
         self.today = today
 
 
@@ -57,7 +57,6 @@ class User:
             obj.m_nVolume,
             obj.m_dMarketValue,
             obj.m_dFloatProfit,
-            obj.m_dProfitRate,
             obj.m_bIsToday
         ) for obj in self.get_positions()]
 
