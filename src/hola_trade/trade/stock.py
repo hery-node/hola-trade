@@ -91,3 +91,23 @@ class Stock:
             return df
         else:
             return pd.DataFrame()
+
+    # return Dataframe
+    def get_history_from_start(self, ctx: Context, fields: List[str], start_time: str):
+        return ctx.get_market_data_from_start(fields, self.code, start_time)
+
+
+class BatchStock:
+    def __init__(self, codes: List[str]) -> None:
+        self.codes = codes
+
+    def get_prices(self, ctx: Context, days: int):
+        return ctx.batch_get_market_data(["close"], self.codes, days)
+
+    def get_rolling_avg_price(self, ctx: Context, window: int, days: int):
+        panel = ctx.batch_get_market_data(["close"], self.codes, days + window)
+        results = {}
+        for code in self.codes:
+            df = panel[code]
+            results[code] = df.rolling(window=window).mean[days*-1:]["close"]
+        return results
