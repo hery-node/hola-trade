@@ -3,10 +3,10 @@ from hola_trade.core.ctx import Context, Container, Log
 
 
 class Account:
-    def __init__(self, id: str, cash: float, stock_value: float, total_assets: float) -> None:
+    def __init__(self, id: str, cash: float, total_assets: float) -> None:
         self.id = id
         self.cash = cash
-        self.stock_value = stock_value
+        self.stock_value = total_assets - cash
         self.total_assets = total_assets
 
 
@@ -78,7 +78,7 @@ class User:
 
     def get_account(self) -> Account:
         account = self.__get_stock_account()
-        return Account(self.id, account.m_dAvailable, account.m_dStockValue, account.m_dBalance)
+        return Account(self.id, account.m_dAvailable, account.m_dBalance)
 
     def get_profit(self, start_assets: float) -> float:
         account = self.get_account()
