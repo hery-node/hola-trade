@@ -25,6 +25,10 @@ class Stock:
     def get_price(self, ctx: Context) -> float:
         return ctx.get_price(self.code)
 
+    def get_field(self, ctx: Context, bar: Bar, field: str) -> float:
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
     def get_rate(self, ctx: Context) -> float:
         price = self.get_price(ctx)
         yest = self.get_yest_close(ctx)
@@ -57,15 +61,15 @@ class Stock:
             return 0
 
     def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
-        days = 5
-        df = ctx.get_market_data(["amount"], self.code, days)
+        days = 6
+        field = "amount"
+        df = ctx.get_market_data([field], self.code, days)
         if len(df) == days:
-            avg = np.mean(df["amount"]) / 240
-            amount = ctx.get_amount(self.code)
+            avg = np.mean(df[field][:-1]) / 240
+            amount = self.get_field(ctx, bar, field)
             minutes = bar.get_open_seconds(ctx) // 60
             if minutes > 0:
                 return round((amount/minutes)/avg, 2)
-
         return 0
 
     # how many days, return Series, must check length

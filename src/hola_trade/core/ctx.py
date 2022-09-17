@@ -1,3 +1,4 @@
+import numpy as np
 from typing import List
 from datetime import datetime
 
@@ -44,11 +45,12 @@ class Context:
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code]["lastPrice"]
 
-    def get_amount(self, code: str) -> float:
+    def get_field(self, code: str, field: str, open_time: str) -> float:
         if self.do_back_test():
-            return self.ContextInfo.get_market_data(["amount"], stock_code=[code])
+            df = self.ContextInfo.get_market_data([field], stock_code=[code], start_time=open_time, skip_paused=False, period="tick", dividend_type='front_ratio')
+            return np.sum(df[field])
         else:
-            return self.ContextInfo.get_full_tick(stock_code=[code])[code]["amount"]
+            return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 
     def get_capital(self) -> float:
         return self.ContextInfo.capital
@@ -71,12 +73,21 @@ class Bar:
         time = self.container.timetag_to_datetime(ctx.get_bar_timetag(), pattern)
         return datetime.strptime(time, pattern)
 
+    def get_bar_open_time(self, ctx: Context) -> datetime:
+        return self.get_bar_date(ctx).replace(hour=9, minute=30, second=0)
+
+    def get_bar_open_str_time(self, ctx: Context) -> str:
+        pattern = "%Y%m%d%H:%M:%S"
+        start = self.get_bar_open_time(ctx)
+        return start.strftime(pattern)
+
     def get_open_seconds(self, ctx: Context) -> int:
-        if not self.is_trade_bar(ctx):
+        bar_time = self.get_bar_time(ctx)
+        if bar_time < "09:30:00" or bar_time > "15:00:00":
             return 0
 
         current = self.get_bar_datetime(ctx)
-        open = self.get_bar_date(ctx).replace(hour=9, minute=30, second=0)
+        open = self.get_bar_open_time(ctx)
         seconds = int((current - open).total_seconds())
         bar_time = self.get_bar_time(ctx)
         if bar_time >= "13:00:00":
