@@ -18,7 +18,7 @@ class Policy:
         self.policy_conditions = policy_conditions
         self.loaded = False
         self.cleaned = False
-        self.enabled = False
+        self.enabled = True
 
     def load(self, ctx: Context) -> None:
         pass
@@ -27,17 +27,21 @@ class Policy:
         pass
 
     def handle_bar(self, ctx: Context) -> None:
+        self.log.log_debug(ctx, "handle_bar")
         if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
+            self.log.log_debug(ctx, "begin loading")
             targets = self.policy_conditions.select_condition.filter(self.bar, ctx, self.user, ctx.get_all_codes())
             self.codes = [target.code for target in targets]
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
+            self.log.log_debug(ctx, "complete loading")
 
         if self.bar.is_trade_bar(ctx):
+            self.log.log_debug(ctx, "handling policy logic")
             buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
             for target in buy_targets:
                 # 开仓受仓位的控制，所以从仓位控制中获得资金
@@ -81,7 +85,9 @@ class Policy:
                             self.user.order_by_value(ctx, holding.code, cash * -1)
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
+            self.log.log_debug(ctx, "begin cleaning")
             self.clean(ctx)
+            self.log.log_debug(ctx, "complete cleaning")
 
             if ctx.do_back_test():
                 profit = self.user.get_profit(ctx.get_capital())

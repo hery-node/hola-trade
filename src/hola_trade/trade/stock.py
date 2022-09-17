@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from typing import List
 from hola_trade.core.ctx import Context, Bar
 
@@ -67,26 +68,26 @@ class Stock:
 
         return 0
 
-    # how many days, return Optional[Series], must check None
+    # how many days, return Series, must check length
     def get_rolling_avg_price(self, ctx: Context, window: int, days: int):
         df = ctx.get_market_data(["close"], self.code, days + window)
         if len(df) == days:
             return df.rolling(window=window).mean[days*-1:]["close"]
         else:
-            return None
+            return pd.Series(dtype=float)
 
-    # return Optional[Series], must check None
+    # return Series, must check length
     def get_prices(self, ctx: Context, days: int):
         df = ctx.get_market_data(["close"], self.code, days)
         if len(df) == days:
             return df["close"]
         else:
-            return None
+            return pd.Series(dtype=float)
 
-    # return Optional[Series], must check None
+    # return Dataframe, must check length
     def get_history(self, ctx: Context, fields: List[str], days: int):
         df = ctx.get_market_data(fields, self.code, days)
         if len(df) == days:
             return df
         else:
-            return None
+            return pd.DataFrame()
