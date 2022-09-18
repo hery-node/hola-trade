@@ -56,7 +56,7 @@ class Context:
             elif field == "low":
                 return np.min(df[field])
             elif field == "open":
-                return self.get_market_data_from_start([field], code, open_time)[field]
+                return self.get_market_data([field], code, 1).iloc[0][field]
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 

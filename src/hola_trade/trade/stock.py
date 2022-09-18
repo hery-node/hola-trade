@@ -118,7 +118,7 @@ class Stock:
         period = days + window
         prices = self.get_prices(ctx, period)
         if len(prices) == period:
-            return prices.rolling(window=window).mean[days * -1:][field]
+            return prices.rolling(window=window).mean()[days * -1:]
         else:
             return pd.Series(dtype=float)
 
@@ -189,7 +189,7 @@ class BatchStock:
         for code in self.codes:
             df = panel[code]
             prices = df[watch_days*-1 - 1:-1][field]
-            slow_prices = df.rolling(window=window).mean[watch_days*-1 - 1:-1][field]
+            slow_prices = df[field].rolling(window=window).mean()[watch_days*-1 - 1:-1]
             diffs = (prices/slow_prices).tolist()
             meet_days = len([diff for diff in diffs if diff < 1])
             if (meet_days/watch_days) > watch_ratio:
