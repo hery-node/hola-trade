@@ -99,7 +99,7 @@ class Bar:
         seconds = int((current - open).total_seconds())
         bar_time = self.get_bar_time(ctx)
         if bar_time >= "13:00:00":
-            return seconds - 90 * 60
+            return int(seconds - 90 * 60)
         else:
             return seconds
 

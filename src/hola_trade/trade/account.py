@@ -5,22 +5,22 @@ from hola_trade.core.ctx import Context, Container, Log
 class Account:
     def __init__(self, id: str, cash: float, total_assets: float) -> None:
         self.id = id
-        self.cash = cash
-        self.stock_value = total_assets - cash
-        self.total_assets = total_assets
+        self.cash = round(cash, 2)
+        self.stock_value = round(total_assets - cash, 2)
+        self.total_assets = round(total_assets, 2)
 
 
 class Holding:
     def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float,  today: bool) -> None:
         self.code = code
         self.open_date = open_date
-        self.open_price = open_price
-        self.price = price
-        self.available = available
-        self.volume = volume
-        self.value = value
-        self.profit = profit
-        self.profit_rate = 0 if value == 0 else int(profit * 100 / value)
+        self.open_price = round(open_price, 2)
+        self.price = round(price, 2)
+        self.available = int(available)
+        self.volume = int(volume)
+        self.value = round(value, 2)
+        self.profit = round(profit, 2)
+        self.profit_rate = 0 if value == 0 else round(profit * 100 / value, 2)
         self.today = today
 
 
@@ -81,8 +81,7 @@ class User:
 
     def get_profit(self, start_assets: float) -> float:
         account = self.get_account()
-        profit = (account.total_assets - start_assets) * 100 / start_assets
-        return round(profit, 2)
+        return round((account.total_assets - start_assets) * 100 / start_assets, 2)
 
     def order_by_value(self, ctx: Context, code: str, cash: float, price: float = 0) -> None:
         if cash:
