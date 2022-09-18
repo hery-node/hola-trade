@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from typing import List
 from hola_trade.core.ctx import Context, Bar
+from hola_trade.trade.condition import Target
 
 
 class Stock:
@@ -169,16 +170,24 @@ class Stock:
 
 
 class BatchStock:
+    # this is used for select condition to boost performance
     def __init__(self, codes: List[str]) -> None:
-        self.codes = codes
+        if len(codes) > 1:
+            self.codes = codes
+        else:
+            raise ValueError("using stock instead of BatchStock")
 
-    def get_prices(self, ctx: Context, days: int):
-        return ctx.batch_get_market_data(["close"], self.codes, days)
-
-    def get_rolling_avg_price(self, ctx: Context, window: int, days: int):
-        panel = ctx.batch_get_market_data(["close"], self.codes, days + window)
-        results = {}
+    # use history data, not including today
+    def below_long_price(self, ctx: Context, window: int, watch_days: int, watch_ratio: float) -> List[Target]:
+        field = "close"
+        panel = ctx.batch_get_market_data([field], self.codes, watch_days + window + 1)
+        results = []
         for code in self.codes:
             df = panel[code]
-            results[code] = df.rolling(window=window).mean[days*-1:]["close"]
+            prices = df[watch_days*-1 - 1:-1][field]
+            slow_prices = df.rolling(window=window).mean[watch_days*-1 - 1:-1][field]
+            diffs = (prices/slow_prices).tolist()
+            meet_days = len([diff for diff in diffs if diff < 1])
+            if (meet_days/watch_days) > watch_ratio:
+                results.append(Target(code, 0))
         return results
