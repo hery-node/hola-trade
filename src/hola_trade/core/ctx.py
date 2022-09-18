@@ -25,13 +25,13 @@ class Context:
     def get_market_data(self, fields: List[str], code: str, days: int):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
 
+     # return Panel
+    def batch_get_market_data(self, fields: List[str], codes: List[str], days: int):
+        return self.ContextInfo.get_market_data(fields, stock_code=codes, skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
+
     # return DataFrame
     def get_market_data_from_start(self, fields: List[str], code: str, start_time: str):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], start_time=start_time, skip_paused=False, period="1d", dividend_type='front_ratio')
-
-    # return Panel
-    def batch_get_market_data(self, fields: List[str], codes: List[str], days: int):
-        return self.ContextInfo.get_market_data(fields, stock_code=codes, skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
 
     def do_back_test(self) -> bool:
         return self.ContextInfo.do_back_test
@@ -46,9 +46,17 @@ class Context:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code]["lastPrice"]
 
     def get_field(self, code: str, field: str, open_time: str) -> float:
+        # get today field value from market open, field can be open,high,low,volume,amount
         if self.do_back_test():
-            df = self.ContextInfo.get_market_data([field], stock_code=[code], start_time=open_time, skip_paused=False, period="tick", dividend_type='front_ratio')
-            return np.sum(df[field])
+            df = self.ContextInfo.get_market_data([field], stock_code=[code], start_time=open_time, skip_paused=False, period="1m", dividend_type='front_ratio')
+            if field == "volume" or field == "amount":
+                return np.sum(df[field])
+            elif field == "high":
+                return np.max(df[field])
+            elif field == "low":
+                return np.min(df[field])
+            elif field == "open":
+                return self.get_market_data_from_start([field], code, open_time)[field]
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 
@@ -77,7 +85,7 @@ class Bar:
         return self.get_bar_date(ctx).replace(hour=9, minute=30, second=0)
 
     def get_bar_open_str_time(self, ctx: Context) -> str:
-        pattern = "%Y%m%d%H:%M:%S"
+        pattern = "%Y%m%d%H%M%S"
         start = self.get_bar_open_time(ctx)
         return start.strftime(pattern)
 

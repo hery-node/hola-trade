@@ -14,26 +14,6 @@ class Stock:
     def get_down_rate(self) -> float:
         return 0.8 if self.code[0] == '3' or self.code[:3] == '688' else 0.9
 
-    # return pandas.Series
-    def get_yest_data(self, ctx: Context, fields: List[str]):
-        df = ctx.get_market_data(fields, self.code, days=2)
-        return df.iloc[0]
-
-    def get_yest_close(self, ctx: Context) -> float:
-        return self.get_yest_data(ctx, ["close"])["close"]
-
-    def get_price(self, ctx: Context) -> float:
-        return ctx.get_price(self.code)
-
-    def get_field(self, ctx: Context, bar: Bar, field: str) -> float:
-        open_time = bar.get_bar_open_str_time(ctx)
-        return ctx.get_field(self.code, field, open_time)
-
-    def get_rate(self, ctx: Context) -> float:
-        price = self.get_price(ctx)
-        yest = self.get_yest_close(ctx)
-        return round((price - yest) * 100 / yest, 2)
-
     def is_up(self, ctx: Context) -> bool:
         current_price = self.get_price(ctx)
         yest_close = self.get_yest_close(ctx)
@@ -46,6 +26,60 @@ class Stock:
         down_price = yest_close * self.get_down_rate()
         return abs(current_price - down_price) < 0.01
 
+    # return pandas.Series
+    def get_yest_data(self, ctx: Context, fields: List[str]):
+        df = ctx.get_market_data(fields, self.code, days=2)
+        return df.iloc[0]
+
+    def get_yest_close(self, ctx: Context) -> float:
+        field = "close"
+        return self.get_yest_data(ctx, [field])[field]
+
+    def get_price(self, ctx: Context) -> float:
+        return ctx.get_price(self.code)
+
+    def get_rate(self, ctx: Context) -> float:
+        price = self.get_price(ctx)
+        yest = self.get_yest_close(ctx)
+        return round((price - yest) * 100 / yest, 2)
+
+    def get_open(self, ctx: Context, bar: Bar) -> float:
+        field = "open"
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
+    def get_high(self, ctx: Context, bar: Bar) -> float:
+        field = "high"
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
+    def get_low(self, ctx: Context, bar: Bar) -> float:
+        field = "low"
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
+    def get_amount(self, ctx: Context, bar: Bar) -> float:
+        field = "amount"
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
+    def get_volume(self, ctx: Context, bar: Bar) -> float:
+        field = "volume"
+        open_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_field(self.code, field, open_time)
+
+    def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
+        days = 6
+        field = "amount"
+        df = ctx.get_market_data([field], self.code, days)
+        if len(df) == days:
+            avg = np.mean(df[field][:-1]) / 240
+            amount = self.get_amount(ctx, bar)
+            minutes = bar.get_open_seconds(ctx) // 60
+            if minutes > 0:
+                return round((amount/minutes)/avg, 2)
+        return 0
+
     def get_avg_amp(self, ctx: Context, days: int) -> float:
         df = ctx.get_market_data(["high", "low"], self.code, days)
         if len(df) == days:
@@ -54,37 +88,28 @@ class Stock:
             return 0
 
     def get_avg_price(self, ctx: Context, days: int) -> float:
-        df = ctx.get_market_data(["close"], self.code, days)
+        field = "close"
+        df = ctx.get_market_data([field], self.code, days)
         if len(df) == days:
-            return np.mean(df["close"])
+            return np.mean(df[field])
         else:
             return 0
 
-    def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
-        days = 6
-        field = "amount"
-        df = ctx.get_market_data([field], self.code, days)
-        if len(df) == days:
-            avg = np.mean(df[field][:-1]) / 240
-            amount = self.get_field(ctx, bar, field)
-            minutes = bar.get_open_seconds(ctx) // 60
-            if minutes > 0:
-                return round((amount/minutes)/avg, 2)
-        return 0
-
-    # how many days, return Series, must check length
     def get_rolling_avg_price(self, ctx: Context, window: int, days: int):
-        df = ctx.get_market_data(["close"], self.code, days + window)
+        # how many days, return Series, must check length
+        field = "close"
+        df = ctx.get_market_data([field], self.code, days + window)
         if len(df) == days:
-            return df.rolling(window=window).mean[days*-1:]["close"]
+            return df.rolling(window=window).mean[days*-1:][field]
         else:
             return pd.Series(dtype=float)
 
     # return Series, must check length
     def get_prices(self, ctx: Context, days: int):
-        df = ctx.get_market_data(["close"], self.code, days)
+        field = "close"
+        df = ctx.get_market_data([field], self.code, days)
         if len(df) == days:
-            return df["close"]
+            return df[field]
         else:
             return pd.Series(dtype=float)
 
@@ -99,6 +124,38 @@ class Stock:
     # return Dataframe
     def get_history_from_start(self, ctx: Context, fields: List[str], start_time: str):
         return ctx.get_market_data_from_start(fields, self.code, start_time)
+
+    def get_high_in_days(self, ctx: Context, days: int) -> float:
+        field = "high"
+        df = self.get_history(ctx, [field], days)
+        if len(df) > 0:
+            return np.max(df[field])
+        else:
+            return 0
+
+    def get_high_from_start(self, ctx: Context, start_time: str) -> float:
+        field = "high"
+        df = self.get_history_from_start(ctx, [field], start_time)
+        if len(df) > 0:
+            return np.max(df[field])
+        else:
+            return 0
+
+    def get_low_in_days(self, ctx: Context, days: int) -> float:
+        field = "low"
+        df = self.get_history(ctx, [field], days)
+        if len(df) > 0:
+            return np.min(df[field])
+        else:
+            return 0
+
+    def get_low_from_start(self, ctx: Context, start_time: str) -> float:
+        field = "low"
+        df = self.get_history_from_start(ctx, [field], start_time)
+        if len(df) > 0:
+            return np.min(df[field])
+        else:
+            return 0
 
 
 class BatchStock:
