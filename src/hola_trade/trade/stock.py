@@ -136,6 +136,7 @@ class Stock:
         df = ctx.get_market_data_from_start(fields, self.code, start_time)
         return df[:-1]
 
+    # not including today
     def get_high_in_days(self, ctx: Context, days: int) -> float:
         field = "high"
         df = self.get_history(ctx, [field], days)
@@ -144,6 +145,7 @@ class Stock:
         else:
             return 0
 
+    # not including today
     def get_high_from_start(self, ctx: Context, start_time: str) -> float:
         field = "high"
         df = self.get_history_from_start(ctx, [field], start_time)
@@ -152,6 +154,7 @@ class Stock:
         else:
             return 0
 
+    # not including today
     def get_low_in_days(self, ctx: Context, days: int) -> float:
         field = "low"
         df = self.get_history(ctx, [field], days)
@@ -160,6 +163,7 @@ class Stock:
         else:
             return 0
 
+   # not including today
     def get_low_from_start(self, ctx: Context, start_time: str) -> float:
         field = "low"
         df = self.get_history_from_start(ctx, [field], start_time)
