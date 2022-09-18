@@ -118,7 +118,7 @@ class Stock:
         period = days + window
         prices = self.get_prices(ctx, period)
         if len(prices) == period:
-            return prices.rolling(window=window).mean()[days * -1:]
+            return prices.rolling(window=window).mean()[days * -1:].round(2)
         else:
             return pd.Series(dtype=float)
 
@@ -141,7 +141,7 @@ class Stock:
         field = "high"
         df = self.get_history(ctx, [field], days)
         if len(df) > 0:
-            return round(np.max(df[field]), 2)
+            return np.max(df[field])
         else:
             return 0
 
@@ -150,7 +150,7 @@ class Stock:
         field = "high"
         df = self.get_history_from_start(ctx, [field], start_time)
         if len(df) > 0:
-            return round(np.max(df[field]), 2)
+            return np.max(df[field])
         else:
             return 0
 
@@ -159,7 +159,7 @@ class Stock:
         field = "low"
         df = self.get_history(ctx, [field], days)
         if len(df) > 0:
-            return round(np.min(df[field]), 2)
+            return np.min(df[field])
         else:
             return 0
 
@@ -168,7 +168,7 @@ class Stock:
         field = "low"
         df = self.get_history_from_start(ctx, [field], start_time)
         if len(df) > 0:
-            return round(np.min(df[field]), 2)
+            return np.min(df[field])
         else:
             return 0
 

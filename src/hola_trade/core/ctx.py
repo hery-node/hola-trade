@@ -23,15 +23,15 @@ class Context:
 
     # return DataFrame
     def get_market_data(self, fields: List[str], code: str, days: int):
-        return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
+        return self.ContextInfo.get_market_data(fields, stock_code=[code], skip_paused=False, period="1d", dividend_type='front_ratio', count=days).round(2)
 
      # return Panel
     def batch_get_market_data(self, fields: List[str], codes: List[str], days: int):
-        return self.ContextInfo.get_market_data(fields, stock_code=codes, skip_paused=False, period="1d", dividend_type='front_ratio', count=days)
+        return self.ContextInfo.get_market_data(fields, stock_code=codes, skip_paused=False, period="1d", dividend_type='front_ratio', count=days).round(2)
 
     # return DataFrame
     def get_market_data_from_start(self, fields: List[str], code: str, start_time: str):
-        return self.ContextInfo.get_market_data(fields, stock_code=[code], start_time=start_time, skip_paused=False, period="1d", dividend_type='front_ratio')
+        return self.ContextInfo.get_market_data(fields, stock_code=[code], start_time=start_time, skip_paused=False, period="1d", dividend_type='front_ratio').round(2)
 
     def do_back_test(self) -> bool:
         return self.ContextInfo.do_back_test
