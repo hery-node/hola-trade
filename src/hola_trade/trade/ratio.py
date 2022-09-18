@@ -51,13 +51,14 @@ class RatioRule(ABC):
         if holding:
             holding_left_money = holding_money - holding.value
             if holding_left_money > 0:
-                return min([batch_money, holding_left_money, account.cash, max_money])
+                money = round(min([batch_money, holding_left_money, account.cash, max_money]), 2)
+                return 0 if money < holding.price * 100 else money
             else:
                 self.log.log_info(ctx, "The holding value has reached holding ratio, so no money can be used.")
                 return 0
         else:
             if len(self.user.get_holdings()) < self.holding_ratio.num:
-                return min([batch_money, account.cash, max_money])
+                return round(min([batch_money, account.cash, max_money]), 2)
             else:
                 self.log.log_info(ctx, f"The holding number has reached max_holdings:{self.holding_ratio.num}, so no money can be used.")
                 return 0
