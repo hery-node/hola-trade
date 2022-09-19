@@ -154,7 +154,11 @@ class User:
             raise ValueError(f"ratio should between 0~1")
 
         pr_type = "FIX" if price > 0 else ("LATEST" if Setting.price_mode == self.price_latest else "COMPETE")
+        self.log.log_info(f"order_target_ratio code:{code} with ratio:{ratio} with {pr_type} price:{price}", ctx)
         self.container.order_target_percent(code, ratio, pr_type, price, ctx.ContextInfo, self.id)
+
+    def clear_holding(self, ctx: Context, code: str) -> None:
+        self.order_target_ratio(ctx, code, 0)
 
     def clear_holdings(self, ctx: Context) -> None:
         codes = self.get_available_holding_codes()

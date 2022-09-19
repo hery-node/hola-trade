@@ -100,7 +100,7 @@ class TrendRatioRule(RatioRule):
         mid_price = self.main_stock.get_avg_price(ctx, self.mid_ratio.num)
         long_price = self.main_stock.get_avg_price(ctx, self.long_ratio.num)
         prices = [short_price, mid_price, long_price]
-        total = len([price for price in prices if price > current_price])
+        total = len([price for price in prices if price < current_price])
         if total == 3:
             return self.long_ratio.ratio
         elif total == 2:
