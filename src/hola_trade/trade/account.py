@@ -9,6 +9,9 @@ class Account:
         self.stock_value = round(total_assets - cash, 2)
         self.total_assets = round(total_assets, 2)
 
+    def __str__(self):
+        return f'id is {self.id}, cash is {self.cash}, stock_value is {self.stock_value}, total_assets is {self.total_assets}'
+
 
 class Holding:
     def __init__(self, code: str, open_date: str, open_price: float, price: float, available: int, volume: int, value: float, profit: float,  today: bool) -> None:
@@ -22,6 +25,9 @@ class Holding:
         self.profit = round(profit, 2)
         self.profit_rate = 0 if value == 0 else round(profit * 100 / value, 2)
         self.today = today
+
+    def __str__(self):
+        return f'code is {self.code}, open_date is {self.open_date}, open_price is {self.open_price}, price is {self.price}, available is {self.available}, volume is {self.volume}, value is {self.value}, profit is {self.profit}, profit_rate is {self.profit_rate}% and today is {self.today}'
 
 
 class User:
