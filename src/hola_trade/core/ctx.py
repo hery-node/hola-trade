@@ -7,14 +7,18 @@ from datetime import datetime
 class Setting:
     # 0, debug, 1:info, 2: warn, 3:error
     log_level = 0
+    # 0, disable, 1: enable
+    quick_trade = 1
+    # default price mode, 11:fixed, 14:matched
+    price_mode = 11
 
 
 class Container:
-    def __init__(self, timetag_to_datetime, get_trade_detail_data, order_value, order_shares) -> None:
+    def __init__(self, timetag_to_datetime, get_trade_detail_data, passorder, order_target_percent) -> None:
         self.timetag_to_datetime = timetag_to_datetime
         self.get_trade_detail_data = get_trade_detail_data
-        self.order_value = order_value
-        self.order_shares = order_shares
+        self.passorder = passorder
+        self.order_target_percent = order_target_percent
 
 
 class Context:

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from hola_trade.core.ctx import Context, Container, Log
+from hola_trade.core.ctx import Setting, Context, Container, Log
 
 
 class Account:
@@ -30,6 +30,15 @@ class User:
         self.type = type
         self.container = container
         self.log = Log(container)
+        self.buy_code = 23 if type == 'STOCK' else 33
+        self.sell_code = 24 if type == 'STOCK' else 34
+        self.type_order_by_share = 1101
+        self.type_order_by_value = 1102
+        self.type_order_by_total_ratio = 1113
+        self.type_order_by_available_ratio = 1123
+        self.price_latest = 5
+        self.price_fixed = 11
+        self.price_match = 14
 
     def __get_stock_account(self):
         accounts = self.container.get_trade_detail_data(self.id, self.type, "ACCOUNT")
@@ -83,20 +92,71 @@ class User:
         account = self.get_account()
         return round((account.total_assets - start_assets) * 100 / start_assets, 2)
 
-    def order_by_value(self, ctx: Context, code: str, cash: float, price: float = 0) -> None:
-        if cash:
-            if price:
-                self.log.log_info(f"order_by_cash: code:{code} at price:{price} with cash:{cash}", ctx)
-                self.container.order_value(code, cash, 'FIX', price, ctx.ContextInfo, self.id)
-            else:
-                self.log.log_info(f"order_by_cash: code:{code} with cash:{cash} at latest price", ctx)
-                self.container.order_value(code, cash, ctx.ContextInfo, self.id)
+#  passorder(opType, orderType, accountid, orderCode, prType, modelprice, volume[, strategyName, quickTrade, userOrderId], ContextInfo)
+#   # 单股单账号股票最新价买入 100 股（1 手）
+#     passorder(23, 1101, 'test', target, 5, 0, 100, ContextInfo)
 
-    def order_by_shares(self, ctx: Context, code: str, share: int, price: float = 0) -> None:
-        if share:
-            if price:
-                self.log.log_info(f"order_by_shares: code:{code} at price:{price} with share:{share}", ctx)
-                self.container.order_shares(code, share, 'FIX', price, ctx.ContextInfo, self.id)
-            else:
-                self.log.log_info(f"order_by_shares: code:{code} with share:{share} at latest price", ctx)
-                self.container.order_shares(code, share, ctx.ContextInfo, self.id)
+#     # 单股单账号股票指定价买入 100 股（1 手）
+#     passorder(23, 1101, 'test', target, 11, 7, 100, ContextInfo)
+    def __pass_order(self, ctx: Context, op_type: int, order_type: int, code: str, pr_type: int, num: float, price: float = 0, policy: str = ""):
+        action = "buy" if op_type == self.buy_code else "sell"
+        unit = "share" if order_type == self.type_order_by_share else ("value" if order_type == self.type_order_by_value else ("total ratio" if order_type == self.type_order_by_total_ratio else "available ratio"))
+        price_type = "latest" if pr_type == self.price_latest else ("fixed" if pr_type == self.price_fixed else "matched")
+        self.log.log_info(f"{action} code:{code} at {price_type} price:{price} with {num} {unit} [{policy}]", ctx)
+        self.container.passorder(op_type, order_type, self.id, code, pr_type, price, num, policy, Setting.quick_trade, "", ctx.ContextInfo)
+
+    def buy_by_value(self, ctx: Context, code: str, cash: float, price: float = 0, policy: str = "") -> None:
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.buy_code, self.type_order_by_value, code, pr_type, cash, price, policy)
+
+    def buy_by_share(self, ctx: Context, code: str, share: int, price: float = 0, policy: str = "") -> None:
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.buy_code, self.type_order_by_share, code, pr_type, share, price, policy)
+
+    def buy_by_total_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
+        if ratio <= 0 or ratio > 1:
+            raise ValueError(f"ratio should between 0~1")
+
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.buy_code, self.type_order_by_total_ratio, code, pr_type, ratio, price, policy)
+
+    def buy_by_available_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
+        if ratio <= 0 or ratio > 1:
+            raise ValueError(f"ratio should between 0~1")
+
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.buy_code, self.type_order_by_available_ratio, code, pr_type, ratio, price, policy)
+
+    def sell_by_value(self, ctx: Context, code: str, cash: float, price: float = 0, policy: str = "") -> None:
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.sell_code, self.type_order_by_value, code, pr_type, cash, price, policy)
+
+    def sell_by_share(self, ctx: Context, code: str, share: int, price: float = 0, policy: str = "") -> None:
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.sell_code, self.type_order_by_share, code, pr_type, share, price, policy)
+
+    def sell_by_total_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
+        if ratio <= 0 or ratio > 1:
+            raise ValueError(f"ratio should between 0~1")
+
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.sell_code, self.type_order_by_total_ratio, code, pr_type, ratio, price, policy)
+
+    def sell_by_available_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
+        if ratio <= 0 or ratio > 1:
+            raise ValueError(f"ratio should between 0~1")
+
+        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        self.__pass_order(ctx, self.sell_code, self.type_order_by_available_ratio, code, pr_type, ratio, price, policy)
+
+    def order_target_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0) -> None:
+        if ratio < 0 or ratio > 1:
+            raise ValueError(f"ratio should between 0~1")
+
+        pr_type = "FIX" if price > 0 else ("LATEST" if Setting.price_mode == self.price_latest else "COMPETE")
+        self.container.order_target_percent(code, ratio, pr_type, price, ctx.ContextInfo, self.id)
+
+    def clear_holdings(self, ctx: Context) -> None:
+        codes = self.get_available_holding_codes()
+        for code in codes:
+            self.order_target_ratio(ctx, code, 0)
