@@ -1,6 +1,12 @@
+from multiprocessing import context
 import numpy as np
 from typing import List
 from datetime import datetime
+
+
+class Setting:
+    # 0, debug, 1:info, 2: warn, 3:error
+    log_level = 0
 
 
 class Container:
@@ -127,23 +133,29 @@ class Bar:
 
 
 class Log:
-    log_level = 0
 
     def __init__(self, container: Container) -> None:
         self.bar = Bar(container)
 
-    def log_debug(self, ctx: Context, msg: str) -> None:
-        if self.log_level == 0:
+    def __print_msg(self, msg: str, ctx: Context):
+        if ctx:
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+        else:
+            print(msg)
 
-    def log_info(self, ctx: Context, msg: str) -> None:
-        if self.log_level <= 1:
-            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+    # ctx: default value is None, if pass value, it will print bar timestamp and it is useful for back testing.
+    def log_debug(self, msg: str, ctx: Context = None) -> None:
+        if Setting.log_level <= 0:
+            self.__print_msg(msg, ctx)
 
-    def log_warn(self, ctx: Context, msg: str) -> None:
-        if self.log_level <= 2:
-            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+    def log_info(self, msg: str, ctx: Context = None) -> None:
+        if Setting.log_level <= 1:
+            self.__print_msg(msg, ctx)
 
-    def log_error(self, ctx: Context, msg: str) -> None:
-        if self.log_level <= 3:
-            print(f"{self.bar.get_timestamp(ctx)}: {msg}")
+    def log_warn(self, msg: str, ctx: Context = None) -> None:
+        if Setting.log_level <= 2:
+            self.__print_msg(msg, ctx)
+
+    def log_error(self, msg: str, ctx: Context = None) -> None:
+        if Setting.log_level <= 3:
+            self.__print_msg(msg, ctx)

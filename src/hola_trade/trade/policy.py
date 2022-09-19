@@ -28,12 +28,12 @@ class Policy:
         pass
 
     def handle_bar(self, ctx: Context) -> None:
-        self.log.log_debug(ctx, "handle_bar")
+        self.log.log_debug("handle_bar", ctx)
         if (not self.enabled) or (self.bar.is_history_bar(ctx)):
             return
 
         if (not self.loaded) and self.bar.is_trade_bar(ctx):
-            self.log.log_debug(ctx, "begin loading")
+            self.log.log_debug("begin loading", ctx)
             holding_codes = self.user.get_holding_codes()
             holding_num = self.ratio_rule.holding_ratio.num
             if len(holding_codes) < holding_num:
@@ -46,16 +46,16 @@ class Policy:
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
-            self.log.log_debug(ctx, "complete loading")
+            self.log.log_debug("complete loading", ctx)
 
         if self.bar.is_trade_bar(ctx):
-            self.log.log_debug(ctx, "handling policy logic")
+            self.log.log_debug("handling policy logic", ctx)
             buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
             for target in buy_targets:
                 # 开仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.log.log_debug(ctx, f"{target.code} meets the buy condition and buy it")
+                    self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
                     self.user.order_by_value(ctx, target.code, money)
 
             holding_codes = self.user.get_available_holding_codes()
@@ -64,19 +64,19 @@ class Policy:
                 # 加仓受仓位的控制，所以从仓位控制中获得资金
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
-                    self.log.log_debug(ctx, f"{target.code} meets the add condition and add it")
+                    self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
                     self.user.order_by_value(ctx, target.code, money)
 
             sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in sell_targets:
                 # 减仓不受仓位的控制，所以从条件中获得卖出金额
-                self.log.log_debug(ctx, f"{target.code} meets the sell condition and sell it")
+                self.log.log_debug(f"{target.code} meets the sell condition and sell it", ctx)
                 self.user.order_by_value(ctx, target.code, target.value * -1)
 
             clear_targets = self.policy_conditions.clear_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in clear_targets:
                 # 清仓用share来卖出
-                self.log.log_debug(ctx, f"{target.code} meets the clear condition and clear it")
+                self.log.log_debug(f"{target.code} meets the clear condition and clear it", ctx)
                 holding = self.user.get_holding(target.code)
                 if holding:
                     self.user.order_by_shares(ctx, target.code, holding.available * -1)
@@ -89,17 +89,17 @@ class Policy:
                         # 按照比例减仓
                         cash = min([holding.available * holding.price, holding.value * ratio])
                         if cash > 0:
-                            self.log.log_debug(ctx, f"{holding.code} meets the adjust condition and adjust it")
+                            self.log.log_debug(f"{holding.code} meets the adjust condition and adjust it", ctx)
                             self.user.order_by_value(ctx, holding.code, cash * -1)
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
-            self.log.log_debug(ctx, "begin cleaning")
+            self.log.log_debug("begin cleaning", ctx)
             self.clean(ctx)
-            self.log.log_debug(ctx, "complete cleaning")
+            self.log.log_debug("complete cleaning", ctx)
 
             if ctx.do_back_test():
                 profit = self.user.get_profit(ctx.get_capital())
-                self.log.log_info(ctx, f"total profit: {profit}%")
+                self.log.log_info(f"total profit: {profit}%", ctx)
 
             self.cleaned = True
             self.loaded = False

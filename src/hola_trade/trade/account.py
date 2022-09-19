@@ -86,17 +86,17 @@ class User:
     def order_by_value(self, ctx: Context, code: str, cash: float, price: float = 0) -> None:
         if cash:
             if price:
-                self.log.log_info(ctx, f" order_by_cash: code:{code} at price:{price} with cash:{cash}")
+                self.log.log_info(f"order_by_cash: code:{code} at price:{price} with cash:{cash}", ctx)
                 self.container.order_value(code, cash, 'FIX', price, ctx.ContextInfo, self.id)
             else:
-                self.log.log_info(ctx, f"order_by_cash: code:{code} with cash:{cash} at latest price")
+                self.log.log_info(f"order_by_cash: code:{code} with cash:{cash} at latest price", ctx)
                 self.container.order_value(code, cash, ctx.ContextInfo, self.id)
 
     def order_by_shares(self, ctx: Context, code: str, share: int, price: float = 0) -> None:
         if share:
             if price:
-                self.log.log_info(ctx, f"order_by_shares: code:{code} at price:{price} with share:{share}")
+                self.log.log_info(f"order_by_shares: code:{code} at price:{price} with share:{share}", ctx)
                 self.container.order_shares(code, share, 'FIX', price, ctx.ContextInfo, self.id)
             else:
-                self.log.log_info(ctx, f"order_by_shares: code:{code} with share:{share} at latest price")
+                self.log.log_info(f"order_by_shares: code:{code} with share:{share} at latest price", ctx)
                 self.container.order_shares(code, share, ctx.ContextInfo, self.id)
