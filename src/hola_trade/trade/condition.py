@@ -5,10 +5,10 @@ from hola_trade.trade.account import User
 
 
 class Target:
-    def __init__(self, code: str, price: float, value: float) -> None:
+    def __init__(self, code: str, value: float = 0, price: float = 0) -> None:
         self.code = code
-        self.price = price
         self.value = value
+        self.price = price
 
 
 class Condition(ABC):

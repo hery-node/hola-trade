@@ -193,5 +193,5 @@ class BatchStock:
             diffs = (prices/slow_prices).tolist()
             meet_days = len([diff for diff in diffs if diff < 1])
             if (meet_days/watch_days) > watch_ratio:
-                results.append(Target(code, 0))
+                results.append(Target(code))
         return results
