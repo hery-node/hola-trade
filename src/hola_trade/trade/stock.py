@@ -182,6 +182,24 @@ class Stock:
         end_time = bar.get_bar_open_str_time(ctx)
         return ctx.get_local_data_from_start(self.code, start, end_time)
 
+    # return Series, must check length, including today
+    def get_local_prices(self, ctx: Context, bar: Bar, days: int):
+        field = "close"
+        df = self.get_local_history(ctx, bar, days)
+        if len(df) == days:
+            df[field].iat[-1] = self.get_price(ctx)
+            return df[field]
+        else:
+            return pd.Series(dtype=float)
+
+   # avg price, including today
+    def get_local_avg_price(self, ctx: Context, bar: Bar, days: int) -> float:
+        prices = self.get_local_prices(ctx, bar, days)
+        if len(prices) > 0:
+            return round(np.mean(prices), 2)
+        else:
+            return 0
+
 
 class BatchStock:
     # this is used for select condition to boost performance
