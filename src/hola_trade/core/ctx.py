@@ -9,8 +9,8 @@ class Setting:
     log_level = 0
     # 0, disable, 1: enable
     quick_trade = 1
-    # default price mode, 11:fixed, 14:matched
-    price_mode = 11
+    # default price mode, 5:latest, 14:matched, other type check doc
+    price_mode = 14
 
 
 class Container:

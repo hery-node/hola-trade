@@ -39,7 +39,7 @@ class Policy:
             if len(holding_codes) < holding_num:
                 codes = ctx.get_stock_list_in_sector(self.sector)
                 targets = self.policy_conditions.select_condition.filter(self.bar, ctx, self.user, codes)
-                self.codes = [target.code for target in targets]
+                self.codes = [target.code for target in targets if target.code not in holding_codes]
             else:
                 self.codes = []
 
@@ -56,7 +56,7 @@ class Policy:
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
                     self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
-                    self.user.buy_by_value(ctx, target.code, money, 0, self.name)
+                    self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
 
             holding_codes = self.user.get_available_holding_codes()
             add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
@@ -65,19 +65,19 @@ class Policy:
                 money = self.ratio_rule.get_money(ctx, target.code)
                 if money > 0:
                     self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
-                    self.user.buy_by_value(ctx, target.code, money, 0, self.name)
+                    self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
 
             sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in sell_targets:
                 # 减仓不受仓位的控制，所以从条件中获得卖出金额
                 self.log.log_debug(f"{target.code} meets the sell condition and sell it", ctx)
-                self.user.sell_by_value(ctx, target.code, target.value, 0, self.name)
+                self.user.sell_by_value(ctx, target.code, target.value, target.price, self.name)
 
             clear_targets = self.policy_conditions.clear_condition.filter(self.bar, ctx, self.user, holding_codes)
             for target in clear_targets:
-                # 清仓用share来卖出
+                # 清仓
                 self.log.log_debug(f"{target.code} meets the clear condition and clear it", ctx)
-                self.user.clear_holding(ctx, target.code)
+                self.user.clear_holding(ctx, target.code, target.price)
 
             if self.bar.is_adjust_bar(ctx, self.adjust_time):
                 ratio = self.ratio_rule.get_adjust_ratio(ctx)
