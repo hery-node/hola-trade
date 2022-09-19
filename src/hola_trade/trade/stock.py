@@ -172,22 +172,30 @@ class Stock:
         else:
             return 0
 
+    # including today, but today day is for 1d period, if you want to get today real tick data, please update it
+    def get_local_history(self, ctx: Context, bar: Bar, days: int):
+        end_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_local_data(self.code, end_time, days)
+
+     # including today, but today day is for 1d period, if you want to get today real tick data, please update it
+    def get_local_history_from_start(self, ctx: Context, bar: Bar, start: str):
+        end_time = bar.get_bar_open_str_time(ctx)
+        return ctx.get_local_data_from_start(self.code, start, end_time)
+
 
 class BatchStock:
     # this is used for select condition to boost performance
     def __init__(self, codes: List[str]) -> None:
         if len(codes) > 1:
             self.codes = codes
-        else:
-            raise ValueError("using stock instead of BatchStock")
 
     # use history data, not including today
-    def below_long_price(self, ctx: Context, window: int, watch_days: int, watch_ratio: float) -> List[Target]:
+    def below_long_price(self, ctx: Context, bar: Bar, window: int, watch_days: int, watch_ratio: float) -> List[Target]:
         field = "close"
-        panel = ctx.batch_get_market_data([field], self.codes, watch_days + window + 1)
         results = []
         for code in self.codes:
-            df = panel[code]
+            stock = Stock(code)
+            df = stock.get_local_history(ctx, bar, watch_days + window + 1)
             prices = df[watch_days*-1 - 1:-1][field]
             slow_prices = df[field].rolling(window=window).mean()[watch_days*-1 - 1:-1]
             diffs = (prices/slow_prices).tolist()
