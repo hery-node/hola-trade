@@ -8,9 +8,10 @@ class Account:
         self.cash = round(cash, 2)
         self.stock_value = round(total_assets - cash, 2)
         self.total_assets = round(total_assets, 2)
+        self.stock_ratio = 0 if total_assets == 0 else round(self.stock_value/self.total_assets, 2)
 
     def __str__(self):
-        return f'id is {self.id}, cash is {self.cash}, stock_value is {self.stock_value}, total_assets is {self.total_assets}'
+        return f'id is {self.id}, cash is {self.cash}, stock_value is {self.stock_value}, stock_ratio is {self.stock_ratio} and total_assets is {self.total_assets}'
 
 
 class Holding:

@@ -49,25 +49,30 @@ class Policy:
             self.log.log_debug(f"complete loading and codes is {self.codes}", ctx)
 
         if self.bar.is_trade_bar(ctx):
-            self.log.log_debug("handling policy logic", ctx)
-            buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
-            if buy_targets and len(buy_targets) > 0:
-                for target in buy_targets:
-                    # 开仓受仓位的控制，所以从仓位控制中获得资金
-                    money = self.ratio_rule.get_money(ctx, target.code)
-                    if money > 0:
-                        self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
-                        self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+            # first check to boost performance
+            account = self.user.get_account()
+            max_ratio = self.ratio_rule.get_max_ratio(ctx)
+            self.log.log_debug(f"handling policy logic and max_ratio is {max_ratio}, account status is {account}", ctx)
 
-            holding_codes = self.user.get_available_holding_codes()
-            add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
-            if add_targets and len(add_targets) > 0:
-                for target in add_targets:
-                    # 加仓受仓位的控制，所以从仓位控制中获得资金
-                    money = self.ratio_rule.get_money(ctx, target.code)
-                    if money > 0:
-                        self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
-                        self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+            if max_ratio > 0 and account.cash > 0 and account.stock_ratio < max_ratio:
+                buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
+                if buy_targets and len(buy_targets) > 0:
+                    for target in buy_targets:
+                        # 开仓受仓位的控制，所以从仓位控制中获得资金
+                        money = self.ratio_rule.get_money(ctx, target.code)
+                        if money > 0:
+                            self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
+                            self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+
+                holding_codes = self.user.get_available_holding_codes()
+                add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
+                if add_targets and len(add_targets) > 0:
+                    for target in add_targets:
+                        # 加仓受仓位的控制，所以从仓位控制中获得资金
+                        money = self.ratio_rule.get_money(ctx, target.code)
+                        if money > 0:
+                            self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
+                            self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
 
             sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, holding_codes)
             if sell_targets and len(sell_targets) > 0:
