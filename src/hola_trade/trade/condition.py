@@ -10,6 +10,9 @@ class Target:
         self.value = value
         self.price = price
 
+    def __str__(self):
+        return f'code is {self.code}, value is {self.value} and price is {self.price}'
+
 
 class Condition(ABC):
     @abstractmethod

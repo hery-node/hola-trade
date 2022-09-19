@@ -13,6 +13,9 @@ class Ratio:
         self.num = num
         self.ratio = ratio
 
+    def __str__(self):
+        return f'num is {self.num} and ratio is {self.ratio}'
+
 
 class RatioRule(ABC):
     # holding_ratio: ratio: 单只股票占最大持仓的比例,而不是总仓位的比例, num:最大持股数量。 batches:分几次建仓。

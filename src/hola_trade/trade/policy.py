@@ -46,38 +46,42 @@ class Policy:
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
-            self.log.log_debug("complete loading", ctx)
+            self.log.log_debug(f"complete loading and codes is {self.codes}", ctx)
 
         if self.bar.is_trade_bar(ctx):
             self.log.log_debug("handling policy logic", ctx)
             buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
-            for target in buy_targets:
-                # 开仓受仓位的控制，所以从仓位控制中获得资金
-                money = self.ratio_rule.get_money(ctx, target.code)
-                if money > 0:
-                    self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
-                    self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+            if buy_targets and len(buy_targets) > 0:
+                for target in buy_targets:
+                    # 开仓受仓位的控制，所以从仓位控制中获得资金
+                    money = self.ratio_rule.get_money(ctx, target.code)
+                    if money > 0:
+                        self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
+                        self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
 
             holding_codes = self.user.get_available_holding_codes()
             add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, holding_codes)
-            for target in add_targets:
-                # 加仓受仓位的控制，所以从仓位控制中获得资金
-                money = self.ratio_rule.get_money(ctx, target.code)
-                if money > 0:
-                    self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
-                    self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+            if add_targets and len(add_targets) > 0:
+                for target in add_targets:
+                    # 加仓受仓位的控制，所以从仓位控制中获得资金
+                    money = self.ratio_rule.get_money(ctx, target.code)
+                    if money > 0:
+                        self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
+                        self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
 
             sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, holding_codes)
-            for target in sell_targets:
-                # 减仓不受仓位的控制，所以从条件中获得卖出金额
-                self.log.log_debug(f"{target.code} meets the sell condition and sell it", ctx)
-                self.user.sell_by_value(ctx, target.code, target.value, target.price, self.name)
+            if sell_targets and len(sell_targets) > 0:
+                for target in sell_targets:
+                    # 减仓不受仓位的控制，所以从条件中获得卖出金额
+                    self.log.log_debug(f"{target.code} meets the sell condition and sell it", ctx)
+                    self.user.sell_by_value(ctx, target.code, target.value, target.price, self.name)
 
             clear_targets = self.policy_conditions.clear_condition.filter(self.bar, ctx, self.user, holding_codes)
-            for target in clear_targets:
-                # 清仓
-                self.log.log_debug(f"{target.code} meets the clear condition and clear it", ctx)
-                self.user.clear_holding(ctx, target.code, target.price)
+            if clear_targets and len(clear_targets) > 0:
+                for target in clear_targets:
+                    # 清仓
+                    self.log.log_debug(f"{target.code} meets the clear condition and clear it", ctx)
+                    self.user.clear_holding(ctx, target.code, target.price)
 
             if self.bar.is_adjust_bar(ctx, self.adjust_time):
                 ratio = self.ratio_rule.get_adjust_ratio(ctx)
