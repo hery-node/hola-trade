@@ -1,5 +1,5 @@
-from multiprocessing import context
 import numpy as np
+import pandas as pd
 from typing import List
 from datetime import datetime
 
@@ -42,6 +42,21 @@ class Context:
     # return DataFrame
     def get_market_data_from_start(self, fields: List[str], code: str, start_time: str):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], start_time=start_time, skip_paused=False, period="1d", dividend_type='front_ratio').round(2)
+
+    def __convert_local_data_to_dataframe(data):
+        sorted_keys = sorted(data.keys())
+        data_list = [data[i] for i in sorted_keys]
+        return pd.DataFrame(data_list).round(2)
+
+    # return DataFrame
+    def get_local_data(self, code: str, end_time: str, days: int):
+        local_data = self.ContextInfo.get_local_data(stock_code=code, end_time=end_time, period='1d', divid_type='front_ratio', count=days)
+        return self.__convert_local_data_to_dataframe(local_data)
+
+    # return DataFrame
+    def get_local_data_from_start(self, code: str, start_time: str, end_time: str):
+        local_data = self.ContextInfo.get_local_data(stock_code=code, start_time=start_time, end_time=end_time, period='1d', divid_type='front_ratio')
+        return self.__convert_local_data_to_dataframe(local_data)
 
     def do_back_test(self) -> bool:
         return self.ContextInfo.do_back_test
