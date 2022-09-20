@@ -165,6 +165,7 @@ class Log:
 
     def __print_msg(self, msg: str, ctx: Context):
         if ctx:
+            print("")
             print(f"{self.bar.get_timestamp(ctx)}: {msg}")
         else:
             print(msg)

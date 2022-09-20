@@ -1,3 +1,4 @@
+from typing import Tuple
 from abc import ABC, abstractmethod
 from hola_trade.trade.stock import Stock
 from hola_trade.trade.account import User
@@ -33,17 +34,18 @@ class RatioRule(ABC):
     def reset(self) -> None:
         self.max_ratio = -1
 
-    def get_adjust_ratio(self, ctx: Context) -> float:
+    def get_adjust_ratio(self, ctx: Context) -> Tuple(float, float):
         account = self.user.get_account()
         # for adjust, use latest value so get again
         max_ratio = self.get_max_ratio(ctx)
         # cache value
         self.max_ratio = max_ratio
         stock_ratio = account.stock_value / account.total_assets
+        self.log.log_debug(f"max ratio is {max_ratio} and stock ratio is {stock_ratio}", ctx)
         if stock_ratio <= max_ratio:
             return 0
         ratio = (stock_ratio - max_ratio) / stock_ratio
-        return round(ratio, 2)
+        return (round(self.max_ratio, 2), round(ratio, 2))
 
     def get_money(self, ctx: Context, code: str) -> float:
         account = self.user.get_account()
@@ -114,6 +116,7 @@ class TrendRatioRule(RatioRule):
         long_price = self.main_stock.get_avg_price(ctx, self.long_ratio.num)
         prices = [short_price, mid_price, long_price]
         total = len([price for price in prices if price < current_price])
+        self.log.log_debug(f"total:{total}, current:{current_price}, short:{short_price},mid:{mid_price},long:{long_price}", ctx)
         if total == 3:
             return self.long_ratio.ratio
         elif total == 2:

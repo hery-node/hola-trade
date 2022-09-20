@@ -19,6 +19,8 @@ class Policy:
         self.policy_conditions = policy_conditions
         # use to cache max_ratio during load to avoid duplicate compute
         self.max_ratio_cache = 0
+        # if adjusted, then no opening or add
+        self.adjusted = False
         self.loaded = False
         self.cleaned = False
         self.enabled = True
@@ -59,12 +61,12 @@ class Policy:
             self.loaded = True
             self.log.log_debug(f"complete loading and codes is {self.codes}", ctx)
 
-        if self.loaded and self.bar.is_trade_bar(ctx):
+        if self.enabled and self.loaded and self.bar.is_trade_bar(ctx):
             available_holding_codes = self.user.get_available_holding_codes()
             available_holding_num = len(available_holding_codes)
 
             # first check to boost performance
-            if len(self.codes) > 0 and self.can_open_target(ctx):
+            if len(self.codes) > 0 and (not self.adjusted) and self.can_open_target(ctx):
                 buy_targets = self.policy_conditions.buy_condition.filter(self.bar, ctx, self.user, self.codes)
                 if buy_targets and len(buy_targets) > 0:
                     for target in buy_targets:
@@ -100,8 +102,9 @@ class Policy:
                         self.user.clear_holding(ctx, target.code, target.price)
 
             if available_holding_num > 0 and self.bar.is_adjust_bar(ctx, self.adjust_time):
-                ratio = self.ratio_rule.get_adjust_ratio(ctx)
+                max_ratio, ratio = self.ratio_rule.get_adjust_ratio(ctx)
                 if ratio > 0:
+                    self.adjusted = True
                     holdings = self.user.get_holdings()
                     for holding in holdings:
                         # 按照比例减仓
@@ -109,16 +112,21 @@ class Policy:
                         if cash > 0:
                             self.log.log_debug(f"{holding.code} meets the adjust condition and adjust it", ctx)
                             self.user.sell_by_value(ctx, holding.code, cash, 0, self.name)
+                else:
+                    if max_ratio > self.max_ratio_cache:
+                        # 由于市场变化,max ratio变大了,可以加仓了,所以需要重新load
+                        self.loaded = False
+                        self.max_ratio_cache = max_ratio
 
         if (not self.cleaned) and self.bar.is_close_bar(ctx):
             self.log.log_debug("begin cleaning", ctx)
             self.ratio_rule.reset()
             self.clean(ctx)
+            self.cleaned = True
+            self.loaded = False
+            self.adjusted = False
             self.log.log_debug("complete cleaning", ctx)
 
             if ctx.do_back_test():
                 profit = self.user.get_profit(ctx.get_capital())
                 self.log.log_info(f"total profit: {profit}%", ctx)
-
-            self.cleaned = True
-            self.loaded = False
