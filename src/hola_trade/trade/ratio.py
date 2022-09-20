@@ -28,30 +28,28 @@ class RatioRule(ABC):
         self.user = user
         self.holding_ratio = holding_ratio
         self.batches = batches
-        self.max_ratio = -1
+        self.max_ratio_cache = -1
 
     # reset cached value
     def reset(self) -> None:
-        self.max_ratio = -1
+        self.max_ratio_cache = -1
 
-    def get_adjust_ratio(self, ctx: Context) -> Tuple(float, float):
+    def get_adjust_ratio(self, ctx: Context) -> Tuple[float, float]:
         account = self.user.get_account()
-        # for adjust, use latest value so get again
-        max_ratio = self.get_max_ratio(ctx)
-        # cache value
-        self.max_ratio = max_ratio
+        # cache value, for adjust, use latest value so get again
+        self.max_ratio_cache = self.get_max_ratio(ctx)
         stock_ratio = account.stock_value / account.total_assets
-        self.log.log_debug(f"max ratio is {max_ratio} and stock ratio is {stock_ratio}", ctx)
-        if stock_ratio <= max_ratio:
+        self.log.log_debug(f"max ratio is {self.max_ratio_cache} and stock ratio is {stock_ratio}", ctx)
+        if stock_ratio <= self.max_ratio_cache:
             return 0
-        ratio = (stock_ratio - max_ratio) / stock_ratio
-        return (round(self.max_ratio, 2), round(ratio, 2))
+        ratio = (stock_ratio - self.max_ratio_cache) / stock_ratio
+        return (round(self.max_ratio_cache, 2), round(ratio, 2))
 
     def get_money(self, ctx: Context, code: str) -> float:
         account = self.user.get_account()
-        max_ratio = self.max_ratio if self.max_ratio >= 0 else self.get_max_ratio(ctx)
+        max_ratio = self.max_ratio_cache if self.max_ratio_cache >= 0 else self.get_max_ratio(ctx)
         # cache value
-        self.max_ratio = max_ratio
+        self.max_ratio_cache = max_ratio
         self.log.log_debug(f"max ratio is {max_ratio}", ctx)
 
         max_money = account.total_assets * max_ratio - account.stock_value
