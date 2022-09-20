@@ -41,7 +41,7 @@ class Stock:
         field = "volume"
         volume = self.get_yest_data(ctx, [field])[field]
         capital = ctx.get_stock_capital(self.code)
-        return round(volume * 100 / capital, 2)
+        return round(volume * 10000 / capital, 2)
 
     def get_price(self, ctx: Context) -> float:
         return round(ctx.get_price(self.code), 2)
@@ -79,7 +79,7 @@ class Stock:
     def get_turnover(self, ctx: Context, bar: Bar) -> float:
         volume = self.get_volume(ctx, bar)
         capital = ctx.get_stock_capital(self.code)
-        return round(volume * 100 / capital, 2)
+        return round(volume * 10000 / capital, 2)
 
     def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
         days = 6
