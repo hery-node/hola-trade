@@ -46,7 +46,7 @@ class Context:
     def get_market_data_from_start(self, fields: List[str], code: str, start_time: str):
         return self.ContextInfo.get_market_data(fields, stock_code=[code], start_time=start_time, skip_paused=False, period="1d", dividend_type='front_ratio').round(2)
 
-    def __convert_local_data_to_dataframe(data):
+    def __convert_local_data_to_dataframe(self, data):
         sorted_keys = sorted(data.keys())
         data_list = [data[i] for i in sorted_keys]
         return pd.DataFrame(data_list).round(2)
