@@ -9,8 +9,11 @@ class Setting:
     log_level = 0
     # 0, disable, 1: enable
     quick_trade = 1
-    # default price mode, 5:latest, 14:matched, other type check doc
-    price_mode = 14
+    # default price mode,3：卖2价 4：卖1价 5:最新价, 6：买1价 12：涨跌停价 13：挂单价 14：对手价, other type check doc
+    default_price_buy_mode = 5
+    default_price_sell_mode = 14
+    # 'LATEST'：最新  'HANG'：挂单 'COMPETE'：对手 'MARKET'：市价 'SALE5', 'SALE4', 'SALE3', 'SALE2', 'SALE1'：卖5-1价 'BUY1', 'BUY2', 'BUY3', 'BUY4', 'BUY5'：买1-5价
+    default_price_target_style = "COMPETE"
 
 
 class Container:

@@ -106,54 +106,54 @@ class User:
         self.container.passorder(op_type, order_type, self.id, code, pr_type, price, num, policy, Setting.quick_trade, "", ctx.ContextInfo)
 
     def buy_by_value(self, ctx: Context, code: str, cash: float, price: float = 0, policy: str = "") -> None:
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_buy_mode
         self.__pass_order(ctx, self.buy_code, self.type_order_by_value, code, pr_type, cash, price, policy)
 
     def buy_by_share(self, ctx: Context, code: str, share: int, price: float = 0, policy: str = "") -> None:
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_buy_mode
         self.__pass_order(ctx, self.buy_code, self.type_order_by_share, code, pr_type, share, price, policy)
 
     def buy_by_total_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
         if ratio <= 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1")
 
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_buy_mode
         self.__pass_order(ctx, self.buy_code, self.type_order_by_total_ratio, code, pr_type, ratio, price, policy)
 
     def buy_by_available_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
         if ratio <= 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1")
 
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_buy_mode
         self.__pass_order(ctx, self.buy_code, self.type_order_by_available_ratio, code, pr_type, ratio, price, policy)
 
     def sell_by_value(self, ctx: Context, code: str, cash: float, price: float = 0, policy: str = "") -> None:
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_sell_mode
         self.__pass_order(ctx, self.sell_code, self.type_order_by_value, code, pr_type, cash, price, policy)
 
     def sell_by_share(self, ctx: Context, code: str, share: int, price: float = 0, policy: str = "") -> None:
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_sell_mode
         self.__pass_order(ctx, self.sell_code, self.type_order_by_share, code, pr_type, share, price, policy)
 
     def sell_by_total_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
         if ratio <= 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1")
 
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_sell_mode
         self.__pass_order(ctx, self.sell_code, self.type_order_by_total_ratio, code, pr_type, ratio, price, policy)
 
     def sell_by_available_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0, policy: str = "") -> None:
         if ratio <= 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1")
 
-        pr_type = self.price_fixed if price > 0 else Setting.price_mode
+        pr_type = self.price_fixed if price > 0 else Setting.default_price_sell_mode
         self.__pass_order(ctx, self.sell_code, self.type_order_by_available_ratio, code, pr_type, ratio, price, policy)
 
     def order_target_ratio(self, ctx: Context, code: str, ratio: float, price: float = 0) -> None:
         if ratio < 0 or ratio > 1:
             raise ValueError(f"ratio should between 0~1")
 
-        pr_type = "FIX" if price > 0 else ("LATEST" if Setting.price_mode == 5 else "COMPETE")
+        pr_type = "FIX" if price > 0 else Setting.default_price_target_style
         self.log.log_info(f"order_target_ratio code:{code} with ratio:{ratio} with {pr_type} price:{price}", ctx)
         self.container.order_target_percent(code, ratio, pr_type, price, ctx.ContextInfo, self.id)
 
