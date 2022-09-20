@@ -213,30 +213,3 @@ class Stock:
             return round(np.mean(prices), 2)
         else:
             return 0
-
-
-class BatchStock:
-    # this is used for select condition to boost performance
-    def __init__(self, codes: List[str]) -> None:
-        if len(codes) > 1:
-            self.codes = codes
-
-    # use history data, not including today
-    def below_long_price(self, ctx: Context, bar: Bar, window: int, watch_days: int, watch_ratio: float, turnover: Tuple[float, float]) -> List[Target]:
-        field = "close"
-        results = []
-        for code in self.codes:
-            stock = Stock(code)
-            yest_turnover = stock.get_yest_turnover(ctx)
-            turnover_low, turnover_high = turnover
-            if yest_turnover > turnover_low and yest_turnover < turnover_high:
-                days = watch_days + window + 1
-                df = stock.get_local_history(ctx, bar, days)
-                if len(df) == days:
-                    prices = df[watch_days*-1 - 1:-1][field]
-                    slow_prices = df[field].rolling(window=window).mean()[watch_days*-1 - 1:-1]
-                    diffs = (prices/slow_prices).tolist()
-                    meet_days = len([diff for diff in diffs if diff < 1])
-                    if (meet_days/watch_days) > watch_ratio:
-                        results.append(Target(code))
-        return results
