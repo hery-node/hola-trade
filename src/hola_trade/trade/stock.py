@@ -122,51 +122,54 @@ class Stock:
         else:
             return pd.Series(dtype=float)
 
-    # return Dataframe, must check length, not including today
-    def get_history(self, ctx: Context, fields: List[str], days: int):
-        days = days + 1
+    # return Dataframe, must check length, including today
+    def get_history(self, ctx: Context, bar: Bar, fields: List[str], days: int):
         df = ctx.get_market_data(fields, self.code, days)
         if len(df) == days:
-            return df[:-1]
+            for index, field in enumerate(fields):
+                df.iat[-1, index] = ctx.get_field(self.code, field, bar.get_bar_open_str_time(ctx))
+            return df.round(2)
         else:
             return pd.DataFrame()
 
-    # return Dataframe, not including today
-    def get_history_from_start(self, ctx: Context, fields: List[str], start_time: str):
+    # return Dataframe, including today
+    def get_history_from_start(self, ctx: Context, bar: Bar, fields: List[str], start_time: str):
         df = ctx.get_market_data_from_start(fields, self.code, start_time)
-        return df[:-1]
+        for index, field in enumerate(fields):
+            df.iat[-1, index] = ctx.get_field(self.code, field, bar.get_bar_open_str_time(ctx))
+        return df.round(2)
 
-    # not including today
-    def get_high_in_days(self, ctx: Context, days: int) -> float:
+    # including today
+    def get_high_in_days(self, ctx: Context, bar: Bar, days: int) -> float:
         field = "high"
-        df = self.get_history(ctx, [field], days)
+        df = self.get_history(ctx, bar, [field], days)
         if len(df) > 0:
             return np.max(df[field])
         else:
             return 0
 
-    # not including today
-    def get_high_from_start(self, ctx: Context, start_time: str) -> float:
+    # including today
+    def get_high_from_start(self, ctx: Context, bar: Bar, start_time: str) -> float:
         field = "high"
-        df = self.get_history_from_start(ctx, [field], start_time)
+        df = self.get_history_from_start(ctx, bar, [field], start_time)
         if len(df) > 0:
             return np.max(df[field])
         else:
             return 0
 
-    # not including today
-    def get_low_in_days(self, ctx: Context, days: int) -> float:
+    # including today
+    def get_low_in_days(self, ctx: Context, bar: Bar, days: int) -> float:
         field = "low"
-        df = self.get_history(ctx, [field], days)
+        df = self.get_history(ctx, bar, [field], days)
         if len(df) > 0:
             return np.min(df[field])
         else:
             return 0
 
-   # not including today
-    def get_low_from_start(self, ctx: Context, start_time: str) -> float:
+   # including today
+    def get_low_from_start(self, ctx: Context, bar: Bar, start_time: str) -> float:
         field = "low"
-        df = self.get_history_from_start(ctx, [field], start_time)
+        df = self.get_history_from_start(ctx, bar, [field], start_time)
         if len(df) > 0:
             return np.min(df[field])
         else:
