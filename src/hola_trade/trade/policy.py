@@ -59,7 +59,7 @@ class Policy:
             self.load(ctx)
             self.cleaned = False
             self.loaded = True
-            self.log.log_debug(f"complete loading and codes is {self.codes}", ctx)
+            self.log.log_debug(f"complete loading and target number is {len(self.codes)}", ctx)
 
         if self.enabled and self.loaded and self.bar.is_trade_bar(ctx):
             available_holding_codes = self.user.get_available_holding_codes()
