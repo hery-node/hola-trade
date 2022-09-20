@@ -38,7 +38,7 @@ class RatioRule(ABC):
         account = self.user.get_account()
         # cache value, for adjust, use latest value so get again
         self.max_ratio_cache = self.get_max_ratio(ctx)
-        stock_ratio = account.stock_value / account.total_assets
+        stock_ratio = account.stock_ratio
         self.log.log_debug(f"max ratio is {self.max_ratio_cache} and stock ratio is {stock_ratio}", ctx)
         if stock_ratio <= self.max_ratio_cache:
             return round(self.max_ratio_cache, 2), 0
