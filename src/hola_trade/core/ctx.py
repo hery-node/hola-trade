@@ -88,6 +88,10 @@ class Context:
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 
+    def get_stock_capital(self, code: str) -> float:
+        names = code.split(".")
+        return self.ContextInfo.get_financial_data('CAPITALSTRUCTURE', 'circulating_capital', names[1], names[0], self.ContextInfo.barpos)
+
     def get_capital(self) -> float:
         return self.ContextInfo.capital
 

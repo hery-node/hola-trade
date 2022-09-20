@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import List, Tuple
 from hola_trade.core.ctx import Context, Bar
 from hola_trade.trade.condition import Target
 
@@ -37,6 +37,12 @@ class Stock:
         close = self.get_yest_data(ctx, [field])[field]
         return round(close, 2)
 
+    def get_yest_turnover(self, ctx: Context) -> float:
+        field = "volume"
+        volume = self.get_yest_data(ctx, [field])[field]
+        capital = ctx.get_stock_capital(self.code)
+        return round(volume * 100 / capital, 2)
+
     def get_price(self, ctx: Context) -> float:
         return round(ctx.get_price(self.code), 2)
 
@@ -69,6 +75,11 @@ class Stock:
         field = "volume"
         open_time = bar.get_bar_open_str_time(ctx)
         return int(ctx.get_field(self.code, field, open_time))
+
+    def get_turnover(self, ctx: Context, bar: Bar) -> float:
+        volume = self.get_volume(ctx, bar)
+        capital = ctx.get_stock_capital(self.code)
+        return round(volume * 100 / capital, 2)
 
     def get_amount_ratio(self, ctx: Context, bar: Bar) -> float:
         days = 6
@@ -211,16 +222,21 @@ class BatchStock:
             self.codes = codes
 
     # use history data, not including today
-    def below_long_price(self, ctx: Context, bar: Bar, window: int, watch_days: int, watch_ratio: float) -> List[Target]:
+    def below_long_price(self, ctx: Context, bar: Bar, window: int, watch_days: int, watch_ratio: float, turnover: Tuple[float, float]) -> List[Target]:
         field = "close"
         results = []
         for code in self.codes:
             stock = Stock(code)
-            df = stock.get_local_history(ctx, bar, watch_days + window + 1)
-            prices = df[watch_days*-1 - 1:-1][field]
-            slow_prices = df[field].rolling(window=window).mean()[watch_days*-1 - 1:-1]
-            diffs = (prices/slow_prices).tolist()
-            meet_days = len([diff for diff in diffs if diff < 1])
-            if (meet_days/watch_days) > watch_ratio:
-                results.append(Target(code))
+            yest_turnover = stock.get_yest_turnover(ctx)
+            turnover_low, turnover_high = turnover
+            if yest_turnover > turnover_low and yest_turnover < turnover_high:
+                days = watch_days + window + 1
+                df = stock.get_local_history(ctx, bar, days)
+                if len(df) == days:
+                    prices = df[watch_days*-1 - 1:-1][field]
+                    slow_prices = df[field].rolling(window=window).mean()[watch_days*-1 - 1:-1]
+                    diffs = (prices/slow_prices).tolist()
+                    meet_days = len([diff for diff in diffs if diff < 1])
+                    if (meet_days/watch_days) > watch_ratio:
+                        results.append(Target(code))
         return results
