@@ -41,9 +41,10 @@ class RatioRule(ABC):
         stock_ratio = account.stock_value / account.total_assets
         self.log.log_debug(f"max ratio is {self.max_ratio_cache} and stock ratio is {stock_ratio}", ctx)
         if stock_ratio <= self.max_ratio_cache:
-            return 0
+            return round(self.max_ratio_cache, 2), 0
+
         ratio = (stock_ratio - self.max_ratio_cache) / stock_ratio
-        return (round(self.max_ratio_cache, 2), round(ratio, 2))
+        return round(self.max_ratio_cache, 2), round(ratio, 2)
 
     def get_money(self, ctx: Context, code: str) -> float:
         account = self.user.get_account()
