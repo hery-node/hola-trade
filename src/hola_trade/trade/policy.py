@@ -81,6 +81,7 @@ class Policy:
 
                             self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
                             self.user.buy_by_value(ctx, target.code, cash, target.price, self.name)
+                            self.codes.remove(target.code)
 
                 if available_holding_num > 0:
                     add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, available_holding_codes)
