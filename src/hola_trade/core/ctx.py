@@ -97,6 +97,17 @@ class Context:
     def get_capital(self) -> float:
         return self.ContextInfo.capital
 
+    def get_period_unit(self) -> int:
+        period = self.ContextInfo.period
+        if period == "1d":
+            return 1
+        elif period == "1m":
+            return 240
+        elif period == "1h":
+            return 4
+        else:
+            raise ValueError("not support such period now")
+
 
 class Bar:
     def __init__(self, container: Container) -> None:
