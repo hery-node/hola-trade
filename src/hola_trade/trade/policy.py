@@ -73,8 +73,14 @@ class Policy:
                         # 开仓受仓位的控制，所以从仓位控制中获得资金
                         money = self.ratio_rule.get_money(ctx, target.code)
                         if money > 0:
+                            cash = money
+                            if target.value > money:
+                                self.log.log_error(f"buy_condition target {target} is more than global ratio control, use money:{money}")
+                            elif target.value > 0:
+                                cash = target.value
+
                             self.log.log_debug(f"{target.code} meets the buy condition and buy it", ctx)
-                            self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+                            self.user.buy_by_value(ctx, target.code, cash, target.price, self.name)
 
                 if available_holding_num > 0:
                     add_targets = self.policy_conditions.add_condition.filter(self.bar, ctx, self.user, available_holding_codes)
@@ -83,8 +89,14 @@ class Policy:
                             # 加仓受仓位的控制，所以从仓位控制中获得资金
                             money = self.ratio_rule.get_money(ctx, target.code)
                             if money > 0:
+                                cash = money
+                                if target.value > money:
+                                    self.log.log_error(f"add_condition target {target} is more than global ratio control, use money:{money}")
+                                elif target.value > 0:
+                                    cash = target.value
+
                                 self.log.log_debug(f"{target.code} meets the add condition and add it", ctx)
-                                self.user.buy_by_value(ctx, target.code, money, target.price, self.name)
+                                self.user.buy_by_value(ctx, target.code, cash, target.price, self.name)
 
             if available_holding_num > 0:
                 sell_targets = self.policy_conditions.sell_condition.filter(self.bar, ctx, self.user, available_holding_codes)

@@ -17,9 +17,11 @@ class Setting:
 
 
 class Container:
-    def __init__(self, timetag_to_datetime, get_trade_detail_data, passorder, order_target_percent) -> None:
+    def __init__(self, timetag_to_datetime, get_trade_detail_data, ext_data, ext_data_rank, passorder, order_target_percent) -> None:
         self.timetag_to_datetime = timetag_to_datetime
         self.get_trade_detail_data = get_trade_detail_data
+        self.ext_data = ext_data
+        self.ext_data_rank = ext_data_rank
         self.passorder = passorder
         self.order_target_percent = order_target_percent
 

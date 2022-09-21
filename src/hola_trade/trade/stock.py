@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from typing import List, Tuple
+from typing import List
 from hola_trade.core.ctx import Context, Bar
-from hola_trade.trade.condition import Target
 
 
 class Stock:
@@ -213,3 +212,15 @@ class Stock:
             return round(np.mean(prices), 2)
         else:
             return 0
+
+    # ext data is local data, so just get history info, so deviation is -1
+    def get_ext_data(self, ctx: Context, bar: Bar, name: str) -> float:
+        container = bar.container
+        value = container.ext_data(name, self.code, -1, ctx.ContextInfo)
+        return round(value, 2)
+
+    # ext data rank is local data, so just get history info, so deviation is -1
+    def get_ext_data_rank(self, ctx: Context, bar: Bar, name: str) -> int:
+        container = bar.container
+        value = container.ext_data_rank(name, self.code, -1, ctx.ContextInfo)
+        return int(value)
