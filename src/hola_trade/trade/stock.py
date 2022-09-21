@@ -214,13 +214,19 @@ class Stock:
             return 0
 
     # ext data is local data, so just get history info, so deviation is -1
-    def get_ext_data(self, ctx: Context, bar: Bar, name: str) -> float:
+    def get_ext_data(self, ctx: Context, bar: Bar, name: str, days: int = 1) -> List[float]:
         container = bar.container
-        value = container.ext_data(name, self.code, -1, ctx.ContextInfo)
-        return round(value, 2)
+        result = []
+        for number in range(days):
+            value = container.ext_data(name, self.code, number-days, ctx.ContextInfo)
+            result.append(round(value, 2))
+        return result
 
     # ext data rank is local data, so just get history info, so deviation is -1
-    def get_ext_data_rank(self, ctx: Context, bar: Bar, name: str) -> int:
+    def get_ext_data_rank(self, ctx: Context, bar: Bar, name: str, days: int = 1) -> List[int]:
         container = bar.container
-        value = container.ext_data_rank(name, self.code, -1, ctx.ContextInfo)
-        return int(value)
+        result = []
+        for number in range(days):
+            value = container.ext_data_rank(name, self.code, number-days, ctx.ContextInfo)
+            result.append(int(value))
+        return result
