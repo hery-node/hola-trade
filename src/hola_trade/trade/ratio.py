@@ -97,10 +97,10 @@ class TrendRatioRule(RatioRule):
         super().__init__(user, container, holding_ratio, batches)
 
         self.main_stock = Stock(main_code)
-        if not (short_ratio.num < mid_ratio.num and mid_ratio.num < long_ratio.num):
+        if not (short_ratio.num <= mid_ratio.num and mid_ratio.num <= long_ratio.num):
             raise ValueError(f"wrong setting: short:{short_ratio.num},mid:{mid_ratio.num},long:{long_ratio.num}")
 
-        if not (short_ratio.ratio < mid_ratio.ratio and mid_ratio.ratio < long_ratio.ratio):
+        if not (short_ratio.ratio <= mid_ratio.ratio and mid_ratio.ratio <= long_ratio.ratio):
             raise ValueError(f"wrong setting: short ratio:{short_ratio.ratio},mid ratio:{mid_ratio.ratio},long ratio:{long_ratio.ratio}")
 
         self.short_ratio = short_ratio
