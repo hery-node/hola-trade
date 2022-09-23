@@ -126,49 +126,6 @@ class SimpleTrendRatioRule(RatioRule):
             return self.no_ratio
 
 
-class SmoothTrendRatioRule(RatioRule):
-    def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_ratio: Ratio, long_ratio: Ratio, no_ratio: float):
-        super().__init__(user, container, holding_ratio, batches)
-
-        self.main_stock = Stock(main_code)
-        if not (short_ratio.num <= long_ratio.num):
-            raise ValueError(f"wrong setting: short:{short_ratio.num},long:{long_ratio.num}")
-
-        if not (short_ratio.ratio <= long_ratio.ratio):
-            raise ValueError(f"wrong setting: short ratio:{short_ratio.ratio},long ratio:{long_ratio.ratio}")
-
-        self.short_ratio = short_ratio
-        self.long_ratio = long_ratio
-        self.no_ratio = no_ratio
-
-    def __get_ratio(self, current_price: float, short_price: float, long_price: float) -> float:
-        prices = [short_price, long_price]
-        total = len([price for price in prices if price < current_price])
-        if short_price > long_price and total == 2:
-            return 2
-        elif short_price <= long_price and total == 2:
-            return 1
-        elif short_price > long_price and total == 1:
-            return 1
-        else:
-            return 0
-
-    def get_max_ratio(self, ctx: Context) -> float:
-        current_prices = self.main_stock.get_prices(ctx, 2)
-        short_prices = self.main_stock.get_rolling_avg_price(ctx, self.short_ratio.num, 2)
-        long_prices = self.main_stock.get_rolling_avg_price(ctx, self.long_ratio.num, 2)
-        current_score = self.__get_ratio(current_prices[1], short_prices[1], long_prices[1])
-        yest_score = self.__get_ratio(current_prices[0], short_prices[0], long_prices[0])
-        step = 1 if current_score > yest_score else (-1 if current_score < yest_score else 0)
-        score = yest_score - step
-        if score == 2:
-            return self.long_ratio.ratio
-        elif score == 1:
-            return self.short_ratio.ratio
-        else:
-            return self.no_ratio
-
-
 class TrendRatioRule(RatioRule):
     def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_days: float, mid_days: float, long_days: float):
         super().__init__(user, container, holding_ratio, batches)
