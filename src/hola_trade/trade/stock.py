@@ -124,7 +124,6 @@ class Stock:
     # avg price, including today
     def get_rolling_avg_price(self, ctx: Context, window: int, days: int):
         # how many days, return Series, must check length
-        field = "close"
         period = days + window
         prices = self.get_prices(ctx, period)
         if len(prices) == period:
