@@ -92,7 +92,7 @@ class StaticRatioRule(RatioRule):
         return self.max_ratio.ratio
 
 
-class TrendRatioRule(RatioRule):
+class SimpleTrendRatioRule(RatioRule):
     def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_ratio: Ratio, mid_ratio: Ratio, long_ratio: Ratio, no_ratio: float):
         super().__init__(user, container, holding_ratio, batches)
 
@@ -124,3 +124,42 @@ class TrendRatioRule(RatioRule):
             return self.short_ratio.ratio
         else:
             return self.no_ratio
+
+
+class TrendRatioRule(RatioRule):
+    def __init__(self, user: User, container: Container, holding_ratio: Ratio, batches: int, main_code: str, short_days: float, mid_days: float, long_days: float):
+        super().__init__(user, container, holding_ratio, batches)
+
+        self.main_stock = Stock(main_code)
+        if not (short_days < mid_days and mid_days < long_days):
+            raise ValueError(f"wrong setting: short:{short_days},mid:{mid_days},long:{long_days}")
+
+        self.short_days = short_days
+        self.mid_days = mid_days
+        self.long_days = long_days
+
+    def get_max_ratio(self, ctx: Context) -> float:
+        current_price = self.main_stock.get_price(ctx)
+        short_price = self.main_stock.get_avg_price(ctx, self.short_days)
+        mid_price = self.main_stock.get_avg_price(ctx, self.mid_days)
+        long_price = self.main_stock.get_avg_price(ctx, self.long_days)
+        prices = [short_price, mid_price, long_price]
+        total = len([price for price in prices if price < current_price])
+        self.log.log_debug(f"total:{total}, current:{current_price}, short:{short_price},mid:{mid_price},long:{long_price}", ctx)
+        weight = 0
+        if short_price >= mid_price and mid_price >= long_price:
+            weight = 3
+        elif short_price >= long_price and long_price >= mid_price:
+            weight = 2
+        elif mid_price >= short_price and short_price >= long_price:
+            weight = 2
+        elif mid_price >= long_price and long_price >= short_price:
+            weight = 1
+        elif long_price >= short_price and short_price >= mid_price:
+            weight = 1
+        elif long_price >= mid_price and mid_price >= short_price:
+            weight = 0
+
+        ratio = 0.1 * ((weight+total) if weight == 0 else weight * total)
+        self.log.log_debug(f"calculated ratio is {ratio}", ctx)
+        return ratio
