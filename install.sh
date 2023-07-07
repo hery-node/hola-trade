@@ -1,1 +1,0 @@
-pip install mypy data-science-types
