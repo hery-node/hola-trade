@@ -90,6 +90,12 @@ class Context:
         else:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 
+    # return DataFrame
+    def get_today_field_values(self, code: str, field: str, open_time: str):
+        # get today field values from market open, field can be high,low
+        df = self.ContextInfo.get_market_data([field], stock_code=[code], start_time=open_time, skip_paused=False, period="1m", dividend_type='front_ratio')
+        return df[field]
+
     def get_stock_capital(self, code: str) -> float:
         names = code.split(".")
         return self.ContextInfo.get_financial_data('CAPITALSTRUCTURE', 'circulating_capital', names[1], names[0], self.ContextInfo.barpos)

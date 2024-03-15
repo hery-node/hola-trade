@@ -60,6 +60,26 @@ class Stock:
         open_time = bar.get_bar_open_str_time(ctx)
         return round(ctx.get_field(self.code, field, open_time), 2)
 
+    # care about false value, so default value is true
+    def is_higher(self, ctx: Context, bar: Bar) -> bool:
+        field = "high"
+        open_time = bar.get_bar_open_str_time(ctx)
+        highs = ctx.get_today_field_values(self.code, field, open_time)
+        if len(highs) > 2:
+            return highs.iloc[-1] > highs.iloc[-2]
+        else:
+            return True
+
+    # care about false value, so default value is true
+    def is_lower(self, ctx: Context, bar: Bar) -> bool:
+        field = "low"
+        open_time = bar.get_bar_open_str_time(ctx)
+        lows = ctx.get_today_field_values(self.code, field, open_time)
+        if len(lows) > 2:
+            return lows.iloc[-1] < lows.iloc[-2]
+        else:
+            return True
+
     def get_low(self, ctx: Context, bar: Bar) -> float:
         field = "low"
         open_time = bar.get_bar_open_str_time(ctx)
