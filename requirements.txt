@@ -1,3 +1,4 @@
+pysos
 numpy
 pandas
 mypy

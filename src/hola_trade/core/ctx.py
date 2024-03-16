@@ -1,12 +1,18 @@
+import os
+import pysos
 import numpy as np
 import pandas as pd
 from typing import List
 from datetime import datetime
 
+from hola_trade.core.util import get_today
+
 
 class Setting:
     # 0, debug, 1:info, 2: warn, 3:error
     log_level = 0
+    # cache directory to save cache
+    cache_dir = "./"
     # 0, disable, 1: enable
     quick_trade = 1
     # default price mode,3：卖2价 4：卖1价 5:最新价, 6：买1价 12：涨跌停价 13：挂单价 14：对手价, other type check doc
@@ -91,7 +97,7 @@ class Context:
             return self.ContextInfo.get_full_tick(stock_code=[code])[code][field]
 
     # return DataFrame
-    def get_today_field_values(self, code: str, field: str, open_time: str):
+    def get_field_values(self, code: str, field: str, open_time: str):
         # get today field values from market open, field can be high,low
         df = self.ContextInfo.get_market_data([field], stock_code=[code], start_time=open_time, skip_paused=False, period="1m", dividend_type='front_ratio')
         return df[field]
@@ -209,3 +215,24 @@ class Log:
     def log_error(self, msg: str, ctx: Context = None) -> None:
         if Setting.log_level <= 3:
             self.__print_msg(msg, ctx)
+
+
+class Cache:
+    def __init__(self, do_back: bool, cache_dir: str) -> None:
+        today = get_today()
+
+        cache_file_name = f"test_{today}.txt" if do_back else f"trade_{today}.txt"
+        cache_file = os.path.join(cache_dir, cache_file_name)
+        self.cache = pysos.Dict(cache_file)
+
+    def set(self, key: str, value) -> None:
+        self.cache[key] = value
+
+    def get(self, key: str):
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            return ""
+
+    def clear(self) -> None:
+        self.cache.clear()
